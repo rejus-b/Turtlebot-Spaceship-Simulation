@@ -8,6 +8,9 @@ from group_project import AJBastroalign
 from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
 from math import sin, cos
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
 
 
 class RoboNaut(Node):
@@ -18,6 +21,9 @@ class RoboNaut(Node):
         self.coordinates = coordinates.get_module_coordinates(coordinates_file_path)
         # naviagte to pose from lab 4
         self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+        # camera subscription and bridge
+        self.subscription = self.create_subscription(Image, 'camera/image_raw', self.camera_view, 10)
+        self.bridge = CvBridge()
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -68,6 +74,17 @@ class RoboNaut(Node):
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
         # NOTE: if you want, you can use the feedback while the robot is moving.
+        
+    def camera_view(self, data):
+        try:
+            self.image = self.bridge.imgmsg_to_cv2(data, "bgr8")   
+        except CvBridgeError:
+            return
+       
+        cv2.namedWindow('camera_Feed',cv2.WINDOW_NORMAL) 
+        cv2.imshow('camera_Feed', self.image)
+        cv2.resizeWindow('camera_Feed', 320, 240) 
+        cv2.waitKey(1)
 
 
 def main():
@@ -83,11 +100,12 @@ def main():
     thread.start()
 
     try:
-        pass
         robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
     except ROSInterruptException:
         pass
-
+    
+    # Remember to destroy all image windows before closing node
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
