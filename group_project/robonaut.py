@@ -12,7 +12,42 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 
+# checklist created by Leandro (fell free to change it/ modify)
+# ============================================================================= #
+# MOVEMENT
+    # Objective -> the demo will last 5 minutes, hence that's our time limit.
+    # Objective -> Ideally we want the robot to go fast when is distant from the target / from a turn 
+    #              and slow close to a turn/ objective
+    # Objective -> Find a good way to make sure the robot turn with the exaxt angulation:
+    #              1) the robot is passing through the door. if 20% of the right part of the camera is a wall, turn left
+    #              2) (suggestion from R.) we could use the map to understand the position of the robot and use that accordingly
+    
+    # Objective -> account for errors the robot could make. Some ways to do that would be:
+    #              1) constantly check the robot sensors and adjust 
+    #              2) use computer vision to keep the robot "in the right direction"
+    
+    # Objective -> planining, obstacle avoidance
 
+# ============================================================================= #
+# ============================================================================= #
+# COMPUTER VISION
+# TODO: take a picture of the windows 
+# TODO: stich pictures
+# TODO: recognise earth and moon, and do calculations
+# TODO: recognise green and red circle (make sure it's a circle and not an hydrant), 
+# TODO: then label the room as good or bad
+# ============================================================================= #
+# ============================================================================= #
+# MOVEMENT AND COMPUTER VISION (actions that require both to be achieved)
+# TODO: position the robot in the right way for taking a picture, hence position robot based on obstacles, lights etc
+# 
+# ============================================================================= #
+
+# ============================================================================= #
+# ENVIRONMENTS CREATION
+# rafael suggested to copy the words and change the lighting and things inside to test everything. I think we will need to then map the place again
+
+# ============================================================================= #
 class RoboNaut(Node):
     def __init__(self):
         super().__init__('robotnaut')
