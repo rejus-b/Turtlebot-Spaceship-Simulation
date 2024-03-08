@@ -13,7 +13,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from geometry_msgs.msg import Twist
 
-# checklist created by Leandro (fell free to change it/ modify)
+# checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
 # MOVEMENT
     # Objective -> the demo will last 5 minutes, hence that's our time limit.
