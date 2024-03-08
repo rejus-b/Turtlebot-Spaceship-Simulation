@@ -11,6 +11,7 @@ from math import sin, cos
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
+from geometry_msgs.msg import Twist
 
 # checklist created by Leandro (fell free to change it/ modify)
 # ============================================================================= #
@@ -59,6 +60,9 @@ class RoboNaut(Node):
         # camera subscription and bridge
         self.subscription = self.create_subscription(Image, 'camera/image_raw', self.camera_view, 10)
         self.bridge = CvBridge()
+        # publisher for velocity
+        self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.rate = self.create_rate(10)  # 10 Hz
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -68,7 +72,6 @@ class RoboNaut(Node):
         #   self.coordinates.module_1.center.y
         
         # Room 2:
-        #   self.coordinates.module_1.entrance.x
         #   self.coordinates.module_2.entrance.x
         #   self.coordinates.module_2.entrance.y
         #   self.coordinates.module_2.center.x
@@ -119,8 +122,39 @@ class RoboNaut(Node):
         cv2.namedWindow('camera_Feed',cv2.WINDOW_NORMAL) 
         cv2.imshow('camera_Feed', self.image)
         cv2.resizeWindow('camera_Feed', 320, 240) 
-        cv2.waitKey(1)
+        cv2.waitKey(3)
+    
+    # rotate by a given angle
+    def rotation(self, angle):
+        desired_velocity = Twist()
+         # Set desired angle in radians
+        # desired_velocity..... =
+        desired_velocity.angular.z = 3.141597 / 8
+        # store current time: t0
+        t0, _ = self.get_clock().now().seconds_nanoseconds()
 
+        current_angle = 0
+        # loop to publish the velocity estimate until desired angle achieved
+        # current angle = current angular velocity * (t1 - t0)
+        while (current_angle < angle):
+            # Publish the velocity
+            self.publisher.publish(desired_velocity)
+
+            # t1 is the current time
+            t1, _ = self.get_clock().now().seconds_nanoseconds()  # to_msg()
+
+            # Calculate current angle
+            current_angle = desired_velocity.angular.z * (t1 - t0)
+
+            self.rate.sleep()
+
+        # set velocity to zero to stop the robot
+        self.stop()
+
+    def stop(self):
+        desired_velocity = Twist()
+        desired_velocity.linear.x = 0.0  # Send zero velocity to stop the robot
+        self.publisher.publish(desired_velocity)
 
 def main():
     def signal_handler(sig, frame):
@@ -136,6 +170,7 @@ def main():
 
     try:
         robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+        robonaut.rotation(2 * 3.141597)
     except ROSInterruptException:
         pass
     
