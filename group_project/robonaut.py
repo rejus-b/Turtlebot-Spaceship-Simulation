@@ -41,6 +41,8 @@ from geometry_msgs.msg import Twist
 # ============================================================================= #
 # MOVEMENT AND COMPUTER VISION (actions that require both to be achieved)
 # TODO: position the robot in the right way for taking a picture, hence position robot based on obstacles, lights etc
+#
+# NOTE: The code section to walk around the actual room will start outside after 'greenFlag = True' or similar
 # 
 # ============================================================================= #
 
@@ -76,7 +78,7 @@ class RoboNaut(Node):
         #   self.coordinates.module_2.entrance.y
         #   self.coordinates.module_2.center.x
         #   self.coordinates.module_2.center.y
-    
+          
     # send goal from lab 4
     def send_goal(self, x, y, yaw):
         goal_msg = NavigateToPose.Goal()
@@ -99,11 +101,12 @@ class RoboNaut(Node):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected')
-            return
+            return 0 ## Return 0 if rejected state
 
         self.get_logger().info('Goal accepted')
         self.get_result_future = goal_handle.get_result_async()
         self.get_result_future.add_done_callback(self.get_result_callback)
+        return 1 ## Return 1 if not rejected
 
     def get_result_callback(self, future):
         result = future.result().result
@@ -155,8 +158,33 @@ class RoboNaut(Node):
         desired_velocity = Twist()
         desired_velocity.linear.x = 0.0  # Send zero velocity to stop the robot
         self.publisher.publish(desired_velocity)
+        
+        
+        
+        
+    # Function to enter the nearby room and walk around a bit
+    # @PARAMS:
+    #           room: (Integer, which room module you want to enter, 1 or 2) // Assume 2 rooms
+    def explore_room(self, room):
+        # First determine which room you are trying to enter 
+        if (room == 1):
+            room = self.coordinates.module_1.center
+        if (room == 2):
+            room = self.coordinates.module_2.center
+        else:
+            self.get_logger().info(f'A bad room code has been provided: {room}')
+    
+        # Lets explore the 1st and 3rd quarter of the room horizontally  as our intial implementation
+        
+        # First need to check if these locations are acceptable goal states
+        location_1 = 
+        
+        goalstate = self.send_goal_future.add_done_callback(self.goal_response_callback)
+        
+        #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+        
 
-def main():
+def main(): 
     def signal_handler(sig, frame):
         # TODO: make sure the robot stops properly here?
         rclpy.shutdown()
