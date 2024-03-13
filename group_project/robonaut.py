@@ -111,6 +111,7 @@ class RoboNaut(Node):
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
+        #print(feedback)
         # NOTE: if you want, you can use the feedback while the robot is moving.
         
     def camera_view(self, data):
@@ -125,7 +126,7 @@ class RoboNaut(Node):
         cv2.waitKey(3)
     
     # rotate by a given angle
-    def rotation(self, angle):
+    def rotation(self, end_angle):
         desired_velocity = Twist()
          # Set desired angle in radians
         # desired_velocity..... =
@@ -136,7 +137,7 @@ class RoboNaut(Node):
         current_angle = 0
         # loop to publish the velocity estimate until desired angle achieved
         # current angle = current angular velocity * (t1 - t0)
-        while (current_angle < angle):
+        while (current_angle < end_angle):
             # Publish the velocity
             self.publisher.publish(desired_velocity)
 
@@ -169,8 +170,11 @@ def main():
     thread.start()
 
     try:
-        robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
-        robonaut.rotation(2 * 3.141597)
+        # example coordinates
+        while rclpy.ok():
+            robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0) 
+            #robonaut.rotation(2 * 3.141597)
+            pass
     except ROSInterruptException:
         pass
     
