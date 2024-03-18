@@ -101,12 +101,12 @@ class RoboNaut(Node):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected')
-            return 0 ## Return 0 if rejected state
+            return 
 
         self.get_logger().info('Goal accepted')
         self.get_result_future = goal_handle.get_result_async()
         self.get_result_future.add_done_callback(self.get_result_callback)
-        return 1 ## Return 1 if not rejected
+
 
     def get_result_callback(self, future):
         result = future.result().result
@@ -130,7 +130,7 @@ class RoboNaut(Node):
     # rotate by a given angle
     def rotation(self, angle):
         desired_velocity = Twist()
-         # Set desired angle in radians
+        # Set desired angle in radians
         # desired_velocity..... =
         desired_velocity.angular.z = 3.141597 / 8
         # store current time: t0
@@ -165,26 +165,67 @@ class RoboNaut(Node):
     # Function to enter the nearby room and walk around a bit
     # @PARAMS:
     #           room: (Integer, which room module you want to enter, 1 or 2) // Assume 2 rooms
+    # @RETURN: 
+    #           1 if room cannot be explored, 0 if succesful 
     def explore_room(self, room):
         # First determine which room you are trying to enter 
         if (room == 1):
             room = self.coordinates.module_1.center
-        if (room == 2):
+        elif (room == 2):
             room = self.coordinates.module_2.center
         else:
             self.get_logger().info(f'A bad room code has been provided: {room}')
-    
+            # return(1)
         # Lets explore the 1st and 3rd quarter of the room horizontally  as our intial implementation
         
-        # First need to check if these locations are acceptable goal states
-        location_1 = 
+        # # First need to check if these locations are acceptable goal states        
+        # if (self.goal_response_callback == 1): # Bad coords
+        #     print("Bad coordinates, cannot move here.")
+        #     # return(1)
+        # elif (self.goal_response_callback == 0): # Good coords
+        #     print("Good coordinates, moving ahead.")
         
-        goalstate = self.send_goal_future.add_done_callback(self.goal_response_callback)
+        # You can access the module coordinates like so:
+        # Room 1:
+        #   self.coordinates.module_1.entrance.x
+        #   self.coordinates.module_1.entrance.y
+        #   self.coordinates.module_1.center.x
+        #   self.coordinates.module_1.center.y
+        
+        # Find the equidistant locations of the room
+        location_1_x = room.x / 2
+        location_2_x = room.x * 1.5
+        
+        # Send the goal
+        self.send_goal(float(200), room.y, 0)
+
+        # Wait for the goal response
+        future = self.send_goal_future
+        future.add_done_callback(self.goal_response_callback) 
+        
+        # try:
+        #     result = future.result()
+        #     if result.accepted:
+        #         self.get_logger().info('Goal was accepted here')  # This should be printed now
+        # except:
+        #     self.get_logger().info('Goal was rejected over 2')
+            
+        # # Send the goal
+        # self.send_goal(location_1_x, room.y, 0)
+
+        # # Wait for the goal response
+        # future = self.send_goal_future
+        # if self.goal_response_callback(future) == 1:
+        #     print("Goal rejected, cannot move here")
+        #     return 1  # Return 1 indicating failure
+        # else:
+        #     print("Goal accepted, moving ahead.")
+            
         
         #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         
 
-def main(): 
+def main():     
     def signal_handler(sig, frame):
         # TODO: make sure the robot stops properly here?
         rclpy.shutdown()
@@ -197,8 +238,9 @@ def main():
     thread.start()
 
     try:
-        robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
-        robonaut.rotation(2 * 3.141597)
+        # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+        robonaut.explore_room(1) # Try send the bot to one side of the room after
+        # robonaut.rotation(2 * 3.141597)
     except ROSInterruptException:
         pass
     
