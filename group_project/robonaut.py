@@ -67,7 +67,7 @@ class RoboNaut(Node):
         self.rate = self.create_rate(10)  # 10 Hz
         
         # Used for knowing if a goal state was rejected or not when trying to explore a room
-        self.explore_room_flag = None
+        self.explore_room_flag = False
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -108,9 +108,9 @@ class RoboNaut(Node):
             return 
 
         self.get_logger().info('Goal accepted')
+        self.explore_room_flag = True
         self.get_result_future = goal_handle.get_result_async()
         self.get_result_future.add_done_callback(self.get_result_callback)
-        self.explore_room_flag = True
 
 
     def get_result_callback(self, future):
@@ -201,13 +201,14 @@ class RoboNaut(Node):
         
         if room_step == 1:   
             location = room.x / 2 # 1st Quarter
-        if room_step == 2:
+        elif room_step == 2:
             location = room.x * 1.5 # 3rd Quarter
         else:
             self.get_logger().info(f'The room_step provided was no accurate: {room_step}.')
         
         # Send the goal
         self.send_goal(location, room.y, 0)
+        print(f"\Location is : {location}")
 
         # Set a local increment
         increment = location / 10 # The increment is room divided into 20ths
@@ -218,44 +219,25 @@ class RoboNaut(Node):
         '''
 
         # Check room flag and execute until it finds a valid location
-        if self.explore_room_flag != True:
-            self.get_logger().info(f'The current goal was not accepted: {room.x}. Trying a new goal location.')
-            while (self.explore_flag != True):
+                
+        if self.explore_room_flag == True:
+            self.get_logger().info(f'The goal was accepted: {location}')
+            
+        elif self.explore_room_flag == False:
+            self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
+            while (self.explore_room_flag != True):
+                print("Im here")
                 self.send_goal(location + increment, room.y, 0)
                 increment += room.x / 10 # The increment is room divided into 20ths
                 if increment > room.x * 2: # If you have exceeded the entire room size stop
                     break
-                
-        elif self.explore_room_flag == True:
-            self.get_logger().info(f'The goal was accepted: {room.x}')
+                elif self.explore_room_flag == True:
+                    self.get_logger().info(f'The goal was accepted: {location}')
 
-        # Wait for the goal response
-        # future = self.send_goal_future
-        # future.add_done_callback(self.goal_response_callback) 
-        
-        # try:
-        #     result = future.result()
-        #     if result.accepted:
-        #         self.get_logger().info('Goal was accepted here')  # This should be printed now
-        # except:
-        #     self.get_logger().info('Goal was rejected over 2')
-            
-        # # Send the goal
-        # self.send_goal(location_1_x, room.y, 0)
-
-        # # Wait for the goal response
-        # future = self.send_goal_future
-        # if self.goal_response_callback(future) == 1:
-        #     print("Goal rejected, cannot move here")
-        #     return 1  # Return 1 indicating failure
-        # else:
-        #     print("Goal accepted, moving ahead.")
-            
-        
         #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         
 
-def main():     
+def main():
     def signal_handler(sig, frame):
         # TODO: make sure the robot stops properly here?
         rclpy.shutdown()
