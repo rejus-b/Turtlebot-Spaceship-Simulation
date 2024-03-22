@@ -197,24 +197,24 @@ class RoboNaut(Node):
         #   self.coordinates.module_1.center.y
         
         # Find the equidistant locations of the room
-        print(f"\nCenter of room is : {room.x}")
+        print(f"\nCenter of room is : {room.y}")
         
         if room_step == 1:   
-            location = room.x / 2 # 1st Quarter
+            location = room.y / 4 # 1st 8th
         elif room_step == 2:
-            location = room.x * 1.5 # 3rd Quarter
+            location = room.y * 1.75 # 7 8th
         else:
             self.get_logger().info(f'The room_step provided was no accurate: {room_step}.')
         
         # Send the goal
-        self.send_goal(location, room.y, 0)
+        self.send_goal(room.x, location, 0)
         print(f"\Location is : {location}")
 
         # Set a local increment
         increment = location / 10 # The increment is room divided into 20ths
 
         '''
-            This kind of solution would assume that somewhere along the x axis is traversable by the robot.
+            This kind of solution would assume that somewhere along the y axis is traversable by the robot.
             If for example there is trash all along the midsection, this algorithm would fail to find somewhere.
         '''
 
@@ -255,7 +255,8 @@ def main():
     try:
         # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-        # robonaut.rotation(2 * 3.141597)
+        robonaut.rotation(2 * 3.141597)
+        robonaut.explore_room(1, 2) 
     except ROSInterruptException:
         pass
     
