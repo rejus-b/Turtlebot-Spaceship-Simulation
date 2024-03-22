@@ -218,8 +218,11 @@ class RoboNaut(Node):
             If for example there is trash all along the midsection, this algorithm would fail to find somewhere.
         '''
 
+        ## I need it to take some time to figure out the async calls otherwise it has a big chance of being lost
+        import time
+        time.sleep(2)
+
         # Check room flag and execute until it finds a valid location
-                
         if self.explore_room_flag == True:
             self.get_logger().info(f'The goal was accepted: {location}')
             
