@@ -230,9 +230,9 @@ class RoboNaut(Node):
             self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
             while (self.explore_room_flag != True):
                 print("Im here")
-                self.send_goal(location + increment, room.y, 0)
-                increment += room.x / 10 # The increment is room divided into 20ths
-                if increment > room.x * 2: # If you have exceeded the entire room size stop
+                self.send_goal(room.x, location + increment, 0)
+                increment += room.y / 10 # The increment is room divided into 20ths
+                if increment > room.y * 2: # If you have exceeded the entire room size stop
                     break
                 elif self.explore_room_flag == True:
                     self.get_logger().info(f'The goal was accepted: {location}')
