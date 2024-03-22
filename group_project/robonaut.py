@@ -12,6 +12,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from geometry_msgs.msg import Twist
+from .detect_picture import detect_window
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -114,16 +115,21 @@ class RoboNaut(Node):
         #print(feedback)
         # NOTE: if you want, you can use the feedback while the robot is moving.
         
+        
     def camera_view(self, data):
         try:
             self.image = self.bridge.imgmsg_to_cv2(data, "bgr8")   
-        except CvBridgeError:
-            return
-       
+        except CvBridgeError as e:
+            print("An error has occoured while trying to convert image in cv: ", e)
+        
+        # detect window
+        window_detected = detect_window(self.image)
+        
+        #show camera feed
         cv2.namedWindow('camera_Feed',cv2.WINDOW_NORMAL) 
         cv2.imshow('camera_Feed', self.image)
         cv2.resizeWindow('camera_Feed', 320, 240) 
-        cv2.waitKey(3)
+        cv2.waitKey(0)
     
     # rotate by a given angle
     def rotation(self, end_angle):
@@ -178,6 +184,11 @@ def main():
     except ROSInterruptException:
         pass
     
+    # Cameras
+    try:
+        robonaut.camera_view()
+    except:
+        print("issue with the camera")
     # Remember to destroy all image windows before closing node
     cv2.destroyAllWindows()
 
