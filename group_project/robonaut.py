@@ -12,7 +12,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from geometry_msgs.msg import Twist
-from .detect_picture import detect_window
+from .detect_window import detect_window
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
