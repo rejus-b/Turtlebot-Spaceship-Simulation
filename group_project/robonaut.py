@@ -132,7 +132,7 @@ class RoboNaut(Node):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
         z = msg.pose.pose.position.z
-        print("X:", x, "Y:", y, "Z:", z)
+        # print("X:", x, "Y:", y, "Z:", z)
         
     def camera_view(self, data):
         try:
@@ -270,11 +270,18 @@ def main():
     thread = threading.Thread(target=rclpy.spin, args=(robonaut,), daemon=True)
     thread.start()
 
+    # Test boolean for room explore once
+    explored = 0
+
     try:
-        # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
-        robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-        robonaut.rotation(2 * 3.141597)
-        robonaut.explore_room(1, 2) 
+        while rclpy.ok():
+            # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+            if (explored == 0):
+                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+                robonaut.rotation(2 * 3.141597)
+                robonaut.explore_room(1, 2) 
+                explored = 1
+            pass
     except ROSInterruptException:
         pass
     
