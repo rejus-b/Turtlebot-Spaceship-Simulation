@@ -17,22 +17,17 @@ def detect_window(image):
     The output might change as we will probably need to either pin the position of the window on the map
     or use the coordinate on the image to rotate the robot
     """
+    """
+    Also publish where the window rotation should happen
+    """
+    
     # convert image in HSV
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
     # apply gaussian blur
     blurred_image = cv2.GaussianBlur(grayscale, (5,5), 0)
     
-    # ============================================================
-    # TODO: need to work on the nest part
-    # Enanche contrast
-    #equalized_image = cv2.equalizeHist(blurred_image)
-    
-    # thresholding
-    # _, binary_mask = cv2.threshold(equalized_image, 200, 255, cv2.THRESH_BINARY)
-    
-    
-    # ============================================================
+    rotation_command = "rect not detected" # when no potential windows are detected
     
     # FIlter everything but dark colours
     masked_dark = cv2.inRange(blurred_image, 0, 40)
@@ -56,17 +51,38 @@ def detect_window(image):
             #compute the bounding rectangle
             for contour in contours_dark:
                 
+                
+                
                 if cv2.contourArea(contour) > 1000:
                     peri = cv2.arcLength(contour, True)
                     approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
                     
+                    
                     if len(approx) == 4:
                         x,y,w,h = cv2.boundingRect(contour)
-                        ratio = float(w)/h
-                        if ratio <= 0.9 or ratio >= 1.1:
-                            image = cv2.drawContours(image, contour, -1, (0, 0, 255), 2)
-                            image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
-    
+                        
+                        # if rect is larger than higher
+                        if w > h:
+                            ratio = float(w)/h
+                            if ratio <= 0.9 or ratio >= 1.1:
+                                image = cv2.drawContours(image, contour, -1, (0, 0, 255), 2)
+                                image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
+                                
+                                
+                                # detect if the rect is in the center
+                                # TODO: return a tuple with window detected and if it's in the middle or not
+                                image_center_x = image.shape[1] // 2
+                                window_center_x = x + w // 2
+                                
+                                if window_center_x < image_center_x - 20:
+                                    rotation_command = "rotate left"  # Rotate left
+                                    
+                                elif window_center_x > image_center_x + 20:
+                                    rotation_command = "rotate right"  # Rotate right
+                                else:
+                                    rotation_command = "good"  # Good position
+                                    
+        
     if len(contours_white) > 0:
         max_dark_contour = max(contours_dark, key=cv2.contourArea, default=None)
 
