@@ -7,12 +7,15 @@ import signal
 from group_project import AJBastroalign
 from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
+from nav_msgs.msg import Odometry
 from math import sin, cos
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from geometry_msgs.msg import Twist
 from .detect_window import detect_window
+from .detect_button import detect_button
+import time
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -60,10 +63,12 @@ class RoboNaut(Node):
         self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         # camera subscription and bridge
         self.subscription = self.create_subscription(Image, 'camera/image_raw', self.camera_view, 10)
+        self.odom_subscription = self.create_subscription(Odometry, '/odom', self.odom_callback,10)
         self.bridge = CvBridge()
         # publisher for velocity
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.rate = self.create_rate(10)  # 10 Hz
+        self.spun = False
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -114,7 +119,12 @@ class RoboNaut(Node):
         feedback = feedback_msg.feedback
         #print(feedback)
         # NOTE: if you want, you can use the feedback while the robot is moving.
-        
+    
+    def odom_callback(a,msg):
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        z = msg.pose.pose.position.z
+        print("X:", x, "Y:", y, "Z:", z)
         
     def camera_view(self, data):
         try:
@@ -124,12 +134,13 @@ class RoboNaut(Node):
         
         # detect window
         window_detected = detect_window(self.image)
+        button_detected = detect_button(self.image)
         
         #show camera feed
         cv2.namedWindow('camera_Feed',cv2.WINDOW_NORMAL) 
         cv2.imshow('camera_Feed', self.image)
         cv2.resizeWindow('camera_Feed', 320, 240) 
-        cv2.waitKey(0)
+        cv2.waitKey(1)
     
     # rotate by a given angle
     def rotation(self, end_angle):
@@ -178,8 +189,12 @@ def main():
     try:
         # example coordinates
         while rclpy.ok():
-            robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0) 
-            #robonaut.rotation(2 * 3.141597)
+            robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)
+            time.sleep(40)
+            if robonaut.spun == False:
+                robonaut.rotation(2 * 3.141597)
+                print("spun")
+                robonaut.spun = True
             pass
     except ROSInterruptException:
         pass
