@@ -72,6 +72,7 @@ class RoboNaut(Node):
         self.rate = self.create_rate(10)  # 10 Hz
         
         self.robot_xyz = [0,0,0]
+        self.detected_colour = 0
         
         #movement flags
         self.spun = False
@@ -147,7 +148,8 @@ class RoboNaut(Node):
         
         # detect window
         window_detected = detect_window(self.image)
-        button_detected = detect_button(self.image)
+        self.detected_colour = detect_button(self.image)
+        
         
         #show camera feed
         cv2.namedWindow('camera_Feed',cv2.WINDOW_NORMAL) 
@@ -278,15 +280,22 @@ def main():
 
     try:
         while rclpy.ok():
+            #print(robonaut.robot_xyz[0],robonaut.robot_xyz[1])
             if robonaut.move_to_entrance_one == True:
                 robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
                 robonaut.move_to_entrance_one = False
-            if abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y) <= 0.5:
+            if abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) <= 0.2 and abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y) <= 0.2:
                 robonaut.at_entrance_one = True
             if robonaut.at_entrance_one and not robonaut.spun:
-                print("spin begin")
+                robonaut.get_logger().info('Spin begin')
                 robonaut.rotation(2 * 3.141597)
-                robonaut.spun = False
+                #robonaut.spun = True
+            if robonaut.at_entrance_one:
+                if robonaut.detected_colour == 1:
+                    robonaut.get_logger().info('At green room')
+                elif robonaut.detected_colour == 2:
+                    robonaut.get_logger().info('At red room')
+                    
             '''
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
