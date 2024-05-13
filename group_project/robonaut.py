@@ -45,6 +45,8 @@ import time
 # ============================================================================= #
 # MOVEMENT AND COMPUTER VISION (actions that require both to be achieved)
 # TODO: position the robot in the right way for taking a picture, hence position robot based on obstacles, lights etc
+#
+# NOTE: The code section to walk around the actual room will start outside after 'greenFlag = True' or similar
 # 
 # ============================================================================= #
 
@@ -69,6 +71,9 @@ class RoboNaut(Node):
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.rate = self.create_rate(10)  # 10 Hz
         self.spun = False
+        
+        # Used for knowing if a goal state was rejected or not when trying to explore a room
+        self.explore_room_flag = False
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -82,7 +87,7 @@ class RoboNaut(Node):
         #   self.coordinates.module_2.entrance.y
         #   self.coordinates.module_2.center.x
         #   self.coordinates.module_2.center.y
-    
+          
     # send goal from lab 4
     def send_goal(self, x, y, yaw):
         goal_msg = NavigateToPose.Goal()
@@ -105,11 +110,14 @@ class RoboNaut(Node):
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected')
-            return
+            self.explore_room_flag = False
+            return 
 
         self.get_logger().info('Goal accepted')
+        self.explore_room_flag = True
         self.get_result_future = goal_handle.get_result_async()
         self.get_result_future.add_done_callback(self.get_result_callback)
+
 
     def get_result_callback(self, future):
         result = future.result().result
@@ -145,7 +153,7 @@ class RoboNaut(Node):
     # rotate by a given angle
     def rotation(self, end_angle):
         desired_velocity = Twist()
-         # Set desired angle in radians
+        # Set desired angle in radians
         # desired_velocity..... =
         desired_velocity.angular.z = 3.141597 / 8
         # store current time: t0
@@ -173,6 +181,82 @@ class RoboNaut(Node):
         desired_velocity = Twist()
         desired_velocity.linear.x = 0.0  # Send zero velocity to stop the robot
         self.publisher.publish(desired_velocity)
+        
+        
+        
+        
+    # Function to enter the nearby room and walk around a bit
+    # @PARAMS:
+    #           room: (Integer, which room module you want to enter, 1 or 2) // Assume 2 rooms
+    #           room_step: (Integer, which step of the room explore you want to execute, currently 1 or 2)
+    def explore_room(self, room, room_step):
+        # First determine which room you are trying to enter 
+        if (room == 1):
+            room = self.coordinates.module_1.center
+        elif (room == 2):
+            room = self.coordinates.module_2.center
+        else:
+            self.get_logger().info(f'A bad room code has been provided: {room}')
+            # return(1)
+        # Lets explore the 1st and 3rd quarter of the room horizontally  as our intial implementation
+        
+        # # First need to check if these locations are acceptable goal states        
+        # if (self.goal_response_callback == 1): # Bad coords
+        #     print("Bad coordinates, cannot move here.")
+        #     # return(1)
+        # elif (self.goal_response_callback == 0): # Good coords
+        #     print("Good coordinates, moving ahead.")
+        
+        # You can access the module coordinates like so:
+        # Room 1:
+        #   self.coordinates.module_1.entrance.x
+        #   self.coordinates.module_1.entrance.y
+        #   self.coordinates.module_1.center.x
+        #   self.coordinates.module_1.center.y
+        
+        # Find the equidistant locations of the room
+        print(f"\nCenter of room is : {room.y}")
+        
+        if room_step == 1:   
+            location = room.y / 4 # 1st 8th
+        elif room_step == 2:
+            location = room.y * 1.75 # 7 8th
+        else:
+            self.get_logger().info(f'The room_step provided was no accurate: {room_step}.')
+        
+        # Send the goal
+        self.send_goal(room.x, location, 0)
+        print(f"\Location is : {location}")
+
+        # Set a local increment
+        increment = location / 10 # The increment is room divided into 20ths
+
+        '''
+            This kind of solution would assume that somewhere along the y axis is traversable by the robot.
+            If for example there is trash all along the midsection, this algorithm would fail to find somewhere.
+        '''
+
+        ## I need it to take some time to figure out the async calls otherwise it has a big chance of being lost
+        import time
+        time.sleep(2)
+
+        # Check room flag and execute until it finds a valid location
+        if self.explore_room_flag == True:
+            self.get_logger().info(f'The goal was accepted: {location}')
+            
+        elif self.explore_room_flag == False:
+            self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
+            while (self.explore_room_flag != True):
+                print("Im here")
+                self.send_goal(room.x, location + increment, 0)
+                increment += room.y / 10 # The increment is room divided into 20ths
+                if increment > room.y * 2: # If you have exceeded the entire room size stop
+                    break
+                elif self.explore_room_flag == True:
+                    self.get_logger().info(f'The goal was accepted: {location}')
+
+        #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+        
 
 def main():
     def signal_handler(sig, frame):
@@ -187,15 +271,10 @@ def main():
     thread.start()
 
     try:
-        # example coordinates
-        while rclpy.ok():
-            robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)
-            time.sleep(40)
-            if robonaut.spun == False:
-                robonaut.rotation(2 * 3.141597)
-                print("spun")
-                robonaut.spun = True
-            pass
+        # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+        robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+        robonaut.rotation(2 * 3.141597)
+        robonaut.explore_room(1, 2) 
     except ROSInterruptException:
         pass
     
