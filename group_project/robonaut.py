@@ -70,10 +70,15 @@ class RoboNaut(Node):
         # publisher for velocity
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.rate = self.create_rate(10)  # 10 Hz
-        self.spun = False
         
-        # Used for knowing if a goal state was rejected or not when trying to explore a room
-        self.explore_room_flag = False
+        self.robot_xyz = [0,0,0]
+        
+        #movement flags
+        self.spun = False
+        self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
+        self.explore = False # Test boolean for room explore once
+        self.move_to_entrance_one = True # check if robot has moved to enterance one
+        self.at_entrance_one = False # check if currently at entrance one
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -128,10 +133,10 @@ class RoboNaut(Node):
         #print(feedback)
         # NOTE: if you want, you can use the feedback while the robot is moving.
     
-    def odom_callback(a,msg):
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
-        z = msg.pose.pose.position.z
+    def odom_callback(self, msg):
+        self.robot_xyz[0] = msg.pose.pose.position.x
+        self.robot_xyz[1] = msg.pose.pose.position.y
+        self.robot_xyz[2] = msg.pose.pose.position.z
         # print("X:", x, "Y:", y, "Z:", z)
         
     def camera_view(self, data):
@@ -269,18 +274,25 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     thread = threading.Thread(target=rclpy.spin, args=(robonaut,), daemon=True)
     thread.start()
-
-    # Test boolean for room explore once
-    explored = 0
+    
 
     try:
         while rclpy.ok():
-            # robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
-            if (explored == 0):
+            if robonaut.move_to_entrance_one == True:
+                robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
+                robonaut.move_to_entrance_one = False
+            if abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y) <= 0.5:
+                robonaut.at_entrance_one = True
+            if robonaut.at_entrance_one and not robonaut.spun:
+                print("spin begin")
+                robonaut.rotation(2 * 3.141597)
+                robonaut.spun = False
+            '''
+            if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 robonaut.rotation(2 * 3.141597)
                 robonaut.explore_room(1, 2) 
-                explored = 1
+                robonaut.explore = True'''
             pass
     except ROSInterruptException:
         pass
