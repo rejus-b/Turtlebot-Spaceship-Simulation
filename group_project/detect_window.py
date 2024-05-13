@@ -23,15 +23,20 @@ def detect_window(image):
     # apply gaussian blur
     blurred_image = cv2.GaussianBlur(grayscale, (5,5), 0)
     
+    # ============================================================
+    # TODO: need to work on the nest part
     # Enanche contrast
-    equalized_image = cv2.equalizeHist(blurred_image)
+    #equalized_image = cv2.equalizeHist(blurred_image)
     
     # thresholding
     # _, binary_mask = cv2.threshold(equalized_image, 200, 255, cv2.THRESH_BINARY)
-        
+    
+    
+    # ============================================================
+    
     # FIlter everything but dark colours
-    masked_dark = cv2.inRange(equalized_image, 0, 40)
-    masked_white = cv2.inRange(equalized_image, 200, 255)
+    masked_dark = cv2.inRange(blurred_image, 0, 40)
+    masked_white = cv2.inRange(blurred_image, 200, 255)
     
     # find contours       
     contours_dark, _= cv2.findContours(masked_dark, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
