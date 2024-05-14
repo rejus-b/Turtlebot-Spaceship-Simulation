@@ -18,7 +18,12 @@ def detect_window(image):
     or use the coordinate on the image to rotate the robot
     """
     """
-    Also publish where the window rotation should happen
+    Returns a tuple of window detected flag and the rotation_indication
+    rotation indication can be:
+    0 if no window is detected
+    1 if the center of the camera is looking at the frame
+    -10 if the camera is shifted left to the frame
+    10 if the camera is shifted right to the frame 
     """
     
     # convert image in HSV
@@ -27,8 +32,8 @@ def detect_window(image):
     # apply gaussian blur
     blurred_image = cv2.GaussianBlur(grayscale, (5,5), 0)
     
-    rotation_command = "rect not detected" # when no potential windows are detected
-    
+    rotation_command = 0 # when no potential windows are detected
+    window_detected = False
     # FIlter everything but dark colours
     masked_dark = cv2.inRange(blurred_image, 0, 40)
     masked_white = cv2.inRange(blurred_image, 200, 255)
@@ -75,12 +80,12 @@ def detect_window(image):
                                 window_center_x = x + w // 2
                                 
                                 if window_center_x < image_center_x - 20:
-                                    rotation_command = "rotate left"  # Rotate left
+                                    rotation_command = 10  # Rotate left
                                     
                                 elif window_center_x > image_center_x + 20:
-                                    rotation_command = "rotate right"  # Rotate right
+                                    rotation_command = -10  # Rotate right
                                 else:
-                                    rotation_command = "good"  # Good position
+                                    rotation_command = 1 # Good position
                                     
         
     if len(contours_white) > 0:
@@ -101,4 +106,4 @@ def detect_window(image):
     cv2.resizeWindow('white_mask', 320, 240) 
     cv2.waitKey(1)
     
-    return None
+    return (window_detected, rotation_command)
