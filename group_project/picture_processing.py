@@ -40,7 +40,7 @@ def from_frame_to_image_for_ml(frame, image_name:str):
         poster_roi = frame[y:y+h, x:x+w]
         
         # Save the cropped poster image to a file
-        done = cv2.imwrite(f"./{image_name}.jpg", poster_roi)
+        done = cv2.imwrite(f"src/group-project-group-5/group_project/{image_name}.jpg", poster_roi)
         return poster_roi
         
     except Exception as e:
@@ -56,8 +56,8 @@ input:
 """
 def resize_jpg_pictures(name1, name2): 
     # Load the two images
-    image1 = cv2.imread(f"./{name1}.jpg")
-    image2 = cv2.imread(f"./{name2}.jpg")
+    image1 = cv2.imread(f"src/group-project-group-5/group_project/{name1}.jpg")
+    image2 = cv2.imread(f"src/group-project-group-5/group_project/{name2}.jpg")
 
     # Get the dimensions of the two images
     height1, width1, _ = image1.shape
@@ -68,12 +68,12 @@ def resize_jpg_pictures(name1, name2):
         # Resize image1 to match the dimensions of image2
         image1_resized = cv2.resize(image1, (width2, height2))
         # Save the resized image
-        cv2.imwrite(f"./{name1}.jpg", image1_resized)
+        cv2.imwrite(f"src/group-project-group-5/group_project/{name1}.jpg", image1_resized)
     else:
         # Resize image2 to match the dimensions of image1
         image2_resized = cv2.resize(image2, (width1, height1))
         # Save the resized image
-        cv2.imwrite(f"./{name2}.jpg", image2_resized)
+        cv2.imwrite(f"src/group-project-group-5/group_project/{name2}.jpg", image2_resized)
         
 
 """
@@ -90,7 +90,7 @@ def from_jpg_to_cv2(filename:str):
     bridge = CvBridge()
 
     # Read the JPEG image
-    jpg_image = cv2.imread(f"./{filename}.jpg")
+    jpg_image = cv2.imread(f"src/group-project-group-5/group_project/{filename}.jpg")
 
     # Convert the image to BGR format
     bgr_image = cv2.cvtColor(jpg_image, cv2.COLOR_BGR2RGB)

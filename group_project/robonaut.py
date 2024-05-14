@@ -348,46 +348,46 @@ def main():
 
     try:
         while rclpy.ok():
-            time.sleep(1) # robot needs beauty sleep to work
-            if not robonaut.room_calc:
-                room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
-                room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
-                if room_one_dis <= room_two_dis:
-                    robonaut.closest_room[0] = robonaut.coordinates.module_1.entrance.x
-                    robonaut.closest_room[1] = robonaut.coordinates.module_1.entrance.y
-                    robonaut.close_room_flag = 1
-                else:
-                    robonaut.closest_room[0] = robonaut.coordinates.module_2.entrance.x
-                    robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
-                    robonaut.close_room_flag = 2
-                robonaut.room_calc = True
+            # time.sleep(1) # robot needs beauty sleep to work
+            # if not robonaut.room_calc:
+            #     room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
+            #     room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
+            #     if room_one_dis <= room_two_dis:
+            #         robonaut.closest_room[0] = robonaut.coordinates.module_1.entrance.x
+            #         robonaut.closest_room[1] = robonaut.coordinates.module_1.entrance.y
+            #         robonaut.close_room_flag = 1
+            #     else:
+            #         robonaut.closest_room[0] = robonaut.coordinates.module_2.entrance.x
+            #         robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
+            #         robonaut.close_room_flag = 2
+            #     robonaut.room_calc = True
 
-            if robonaut.move_to_entrance:
-                robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
-                robonaut.move_to_entrance = False
+            # if robonaut.move_to_entrance:
+            #     robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
+            #     robonaut.move_to_entrance = False
                 
             
-            if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
-                robonaut.at_entrance = True
+            # if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
+            #     robonaut.at_entrance = True
                 
-            if robonaut.at_entrance and not robonaut.spun:
-                robonaut.get_logger().info('Spin begin')
-                robonaut.rotation(2 * 3.141597) 
-                #robonaut.spun = True
+            # if robonaut.at_entrance and not robonaut.spun:
+            #     robonaut.get_logger().info('Spin begin')
+            #     robonaut.rotation(2 * 3.141597) 
+            #     #robonaut.spun = True
 
-            if robonaut.at_entrance:
-                if robonaut.detected_colour == 1:
-                    robonaut.get_logger().info('At green room')
-                    if robonaut.close_room_flag == 1:
-                        robonaut.module_one_colour = 1
-                    elif robonaut.close_room_flag == 2:
-                        robonaut.module_two_colour = 1
-                elif robonaut.detected_colour == 2:
-                    robonaut.get_logger().info('At red room')
-                    if robonaut.close_room_flag == 1:
-                        robonaut.module_one_colour = 2
-                    elif robonaut.close_room_flag == 2:
-                        robonaut.module_two_colour = 2
+            # if robonaut.at_entrance:
+            #     if robonaut.detected_colour == 1:
+            #         robonaut.get_logger().info('At green room')
+            #         if robonaut.close_room_flag == 1:
+            #             robonaut.module_one_colour = 1
+            #         elif robonaut.close_room_flag == 2:
+            #             robonaut.module_two_colour = 1
+            #     elif robonaut.detected_colour == 2:
+            #         robonaut.get_logger().info('At red room')
+            #         if robonaut.close_room_flag == 1:
+            #             robonaut.module_one_colour = 2
+            #         elif robonaut.close_room_flag == 2:
+            #             robonaut.module_two_colour = 2
             '''        
             # if (robonaut.explore == False):
             #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
