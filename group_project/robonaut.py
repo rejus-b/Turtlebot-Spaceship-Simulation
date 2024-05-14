@@ -376,16 +376,23 @@ def main():
             if robonaut.at_entrance:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
-                    if robonaut.module_one_colour == 0 and robonaut.module_two_colour == 0:
-                        pass
+                    if robonaut.close_room_flag == 1:
+                        robonaut.module_one_colour = 1
+                    elif robonaut.close_room_flag == 2:
+                        robonaut.module_two_colour = 1
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
-                    
+                    if robonaut.close_room_flag == 1:
+                        robonaut.module_one_colour = 2
+                    elif robonaut.close_room_flag == 2:
+                        robonaut.module_two_colour = 2
+            '''        
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 robonaut.rotation(2 * 3.141597)
                 robonaut.explore_room(1, 2) 
                 robonaut.explore = True
+            ''' 
                 
             pass
     except ROSInterruptException:
