@@ -21,6 +21,8 @@ import tf2_ros.buffer
 from geometry_msgs.msg import TransformStamped
 # import tf2_ros.listener
 import numpy as np
+from .picture_processing import *
+from .stitcher import perform_stitch
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -387,12 +389,30 @@ def main():
                     elif robonaut.close_room_flag == 2:
                         robonaut.module_two_colour = 2
             '''        
-            if (robonaut.explore == False):
-                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-                robonaut.rotation(2 * 3.141597)
-                robonaut.explore_room(1, 2) 
-                robonaut.explore = True
+            # if (robonaut.explore == False):
+            #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+            #     robonaut.rotation(2 * 3.141597)
+            #     robonaut.explore_room(1, 2) 
+            #     robonaut.explore = True
             ''' 
+            
+                        
+            if cv2.waitKey(1) == ord("i"):
+                robonaut.get_logger().info("i was clicked")
+                output_crop = from_frame_to_image_for_ml(robonaut.image, "frame_cropped_2")
+                robonaut.get_logger().info(f"here the pic: {output_crop}")
+                
+            name1 = "frame_cropped"
+            name2 = "frame_cropped_2" 
+            
+            resize_jpg_pictures(name1, name2)
+            
+            image1 = from_jpg_to_cv2(name1)
+            image2 = from_jpg_to_cv2(name2)
+            
+            perform_stitch(image1, image2)
+            
+                
                 
             pass
     except ROSInterruptException:
