@@ -43,6 +43,8 @@ def detect_window(image):
     contours_white, _ = cv2.findContours(masked_white, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     
     
+    
+    
     # loop over the contours
     
     if len(contours_dark) > 0:
@@ -50,42 +52,47 @@ def detect_window(image):
         # find biggest contour 
         max_dark_contour = max(contours_dark, key=cv2.contourArea, default=None)
         if max_dark_contour is not None:
+                
             window_detected = True
-            print("Window detected")
+        
+            # filter all the contours less than 1000
+            contours_dark = [contour for contour in contours_dark if cv2.contourArea(contour) >= 1000]
             
             #compute the bounding rectangle
-            for contour in contours_dark:
+            for contour_dark in contours_dark:
                 
                 
                 
-                if cv2.contourArea(contour) > 1000:
-                    peri = cv2.arcLength(contour, True)
-                    approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+                if cv2.contourArea(contour_dark) > 1000:
+                    
+                    peri_dark = cv2.arcLength(contour_dark, True)
+                    approx_dark = cv2.approxPolyDP(contour_dark, 0.02 * peri_dark, True)
                     
                     
-                    if len(approx) == 4:
-                        x,y,w,h = cv2.boundingRect(contour)
+                    if len(approx_dark) == 4:
+                        x_d,y_d,w_d,h_d = cv2.boundingRect(contour_dark)
                         
-                        # if rect is larger than higher
-                        if w > h:
-                            ratio = float(w)/h
-                            if ratio <= 0.9 or ratio >= 1.1:
-                                image = cv2.drawContours(image, contour, -1, (0, 0, 255), 2)
-                                image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
+                        # Define a region of interest (ROI) within the bounding rectangle
+                        roi = grayscale[y_d:y_d+h_d, x_d:x_d+w_d]
+                                            
+                        ratio = float(w_d)/h_d
+                        if ratio >=0.90  and ratio <= 1.5:
+                            image = cv2.drawContours(image, contour_dark, -1, (0, 0, 255), 2)
+                            image = cv2.rectangle(image, (x_d,y_d), (x_d+w_d, y_d+h_d), (0,255,0), 2)
+                            
+                            
+                            # detect if the rect is in the center
+                            
+                            image_center_x = image.shape[1] // 2
+                            window_center_x = x_d + w_d // 2
+                            
+                            if window_center_x < image_center_x - 20:
+                                rotation_command = 10  # Rotate left
                                 
-                                
-                                # detect if the rect is in the center
-                                # TODO: return a tuple with window detected and if it's in the middle or not
-                                image_center_x = image.shape[1] // 2
-                                window_center_x = x + w // 2
-                                
-                                if window_center_x < image_center_x - 20:
-                                    rotation_command = 10  # Rotate left
-                                    
-                                elif window_center_x > image_center_x + 20:
-                                    rotation_command = -10  # Rotate right
-                                else:
-                                    rotation_command = 1 # Good position
+                            elif window_center_x > image_center_x + 20:
+                                rotation_command = -10  # Rotate right
+                            else:
+                                rotation_command = 1 # Good position
                                     
         
     if len(contours_white) > 0:
