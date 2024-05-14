@@ -310,8 +310,12 @@ class RoboNaut(Node):
         
         # pitch
         t2 = 2.0 * (w*y - z*x)
-        t2 = 1.0 if t2 > 1.0 else t2
-        t2 = -1.0 if t2 < -1.0 else t2
+        if t2 > 1.0:
+            t2 = 1.0
+        elif t2 < -1.0:
+            t2 = -1.0
+        else:
+            t2 = t2
         pitch_y = np.arcsin(t2)
         
         # yaw
