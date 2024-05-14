@@ -19,6 +19,7 @@ import time
 import tf2_ros.buffer
 from geometry_msgs.msg import TransformStamped
 # import tf2_ros.listener
+import numpy as np
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -76,7 +77,7 @@ class RoboNaut(Node):
         
         self.robot_xyz = [0,0,0]
         self.detected_colour = 0
-        self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw (Unordered rn)
+        self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw
         
         #movement flags
         self.spun = False
@@ -144,22 +145,35 @@ class RoboNaut(Node):
         # NOTE: if you want, you can use the feedback while the robot is moving.
     
     def odom_callback(self, msg):
+        quaternion = [None, None, None, None]
+        
         self.robot_xyz[0] = msg.pose.pose.position.x
         self.robot_xyz[1] = msg.pose.pose.position.y
         self.robot_xyz[2] = msg.pose.pose.position.z
         # print("X:", x, "Y:", y, "Z:", z)
         
         # care about yaw only
+        
+        quaternion[0] = msg.pose.pose.orientation.x
+        quaternion[1] = msg.pose.pose.orientation.y
+        quaternion[2] = msg.pose.pose.orientation.z
+        quaternion[3] = msg.pose.pose.orientation.w
+        
+        self.robot_orientation = self.quaternion_to_euler(quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+        
+        # self.get_logger().info(f"Orientation: {self.robot_orientation}")
 
-        while True:
-            try:
-                # self.get_logger().info('Attempting to get position')
-                tf_output = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time(), rclpy.duration.Duration(seconds=0.1))
-                # self.get_logger().info(tf_output.transform.translation)
-                break
-            except Exception as e:
-                print(e)
-                break
+        # while True:
+        #     try:
+        #         # self.get_logger().info('Attempting to get position')
+        #         tf_output = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time(), rclpy.duration.Duration(seconds=0.1))
+        #         # self.get_logger().info(tf_output.transform.translation)
+        #         break
+        #     except Exception as e:
+        #         print(e)
+        #         break
+        
+        
         
     def camera_view(self, data):
         try:
@@ -285,6 +299,28 @@ class RoboNaut(Node):
 
         #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         
+    # Function to change a set of quaternion angles to euler angles 
+    # @PARAMS:
+    # Quaternion represntation of an angle
+    def quaternion_to_euler(self, x, y, z, w):
+        # roll
+        t0 = 2.0 * (w*x + y*z)
+        t1 = 1.0 - 2.0 * (x*x + y*y)
+        roll_x = np.arctan2(t0, t1)
+        
+        # pitch
+        t2 = 2.0 * (w*y - z*x)
+        t2 = 1.0 if t2 > 1.0 else t2
+        t2 = -1.0 if t2 < -1.0 else t2
+        pitch_y = np.arcsin(t2)
+        
+        # yaw
+        t3 = 2.0 * (w*z +x*y)
+        t4 = 1.0 - 2.0 * (y*y + z*z)
+        yaw_z = np.arctan2(t3, t4)
+        
+        return [roll_x, pitch_y, yaw_z] # Radian return
+        
 
 def main():
     def signal_handler(sig, frame):
@@ -312,20 +348,18 @@ def main():
                 robonaut.get_logger().info('Spin begin')
                 robonaut.rotation(2 * 3.141597)
                 #robonaut.spun = True
-                '''
-                '''
             if robonaut.at_entrance_one:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
-                    
+            '''
             
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 robonaut.rotation(2 * 3.141597)
                 robonaut.explore_room(1, 2) 
-                robonaut.explore = True'''
+                robonaut.explore = True
                 
             pass
     except ROSInterruptException:
