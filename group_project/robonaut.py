@@ -155,10 +155,11 @@ class RoboNaut(Node):
             try:
                 # self.get_logger().info('Attempting to get position')
                 tf_output = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time(), rclpy.duration.Duration(seconds=0.1))
-                self.get_logger().info(tf_output.transform.translation)
+                # self.get_logger().info(tf_output.transform.translation)
                 break
             except Exception as e:
                 print(e)
+                break
         
     def camera_view(self, data):
         try:
@@ -301,6 +302,7 @@ def main():
     try:
         while rclpy.ok():
             #print(robonaut.robot_xyz[0],robonaut.robot_xyz[1])
+            '''
             if robonaut.move_to_entrance_one == True:
                 robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
                 robonaut.move_to_entrance_one = False
@@ -310,18 +312,21 @@ def main():
                 robonaut.get_logger().info('Spin begin')
                 robonaut.rotation(2 * 3.141597)
                 #robonaut.spun = True
+                '''
+                '''
             if robonaut.at_entrance_one:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
                     
-            '''
+            
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 robonaut.rotation(2 * 3.141597)
                 robonaut.explore_room(1, 2) 
                 robonaut.explore = True'''
+                
             pass
     except ROSInterruptException:
         pass
