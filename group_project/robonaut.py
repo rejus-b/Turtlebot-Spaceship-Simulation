@@ -407,8 +407,8 @@ def main():
             
             resize_jpg_pictures(name1, name2)
             
-            image1 = from_jpg_to_cv2(name1)
-            image2 = from_jpg_to_cv2(name2)
+            image1 = from_jpg_to_cv2(name2)
+            image2 = from_jpg_to_cv2(name1)
             
             perform_stitch(image1, image2)
             
