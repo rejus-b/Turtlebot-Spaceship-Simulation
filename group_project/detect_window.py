@@ -51,7 +51,7 @@ def detect_window(image):
         max_dark_contour = max(contours_dark, key=cv2.contourArea, default=None)
         if max_dark_contour is not None:
             window_detected = True
-            print("Window detected")
+           
             
             #compute the bounding rectangle
             for contour in contours_dark:
@@ -67,25 +67,25 @@ def detect_window(image):
                         x,y,w,h = cv2.boundingRect(contour)
                         
                         # if rect is larger than higher
-                        if w > h:
-                            ratio = float(w)/h
-                            if ratio <= 0.9 or ratio >= 1.1:
-                                image = cv2.drawContours(image, contour, -1, (0, 0, 255), 2)
-                                image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
-                                
-                                
-                                # detect if the rect is in the center
-                                # TODO: return a tuple with window detected and if it's in the middle or not
-                                image_center_x = image.shape[1] // 2
-                                window_center_x = x + w // 2
-                                
-                                if window_center_x < image_center_x - 20:
-                                    rotation_command = 10  # Rotate left
-                                    
-                                elif window_center_x > image_center_x + 20:
-                                    rotation_command = -10  # Rotate right
-                                else:
-                                    rotation_command = 1 # Good position
+                       
+                        #ratio = float(w)/h
+                        
+                        image = cv2.drawContours(image, contour, -1, (0, 0, 255), 2)
+                        image = cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
+                        
+                        
+                        # detect if the rect is in the center
+                        # TODO: return a tuple with window detected and if it's in the middle or not
+                        image_center_x = image.shape[1] // 2
+                        window_center_x = x + w // 2
+                        
+                        if window_center_x < image_center_x - 20:
+                            rotation_command = 10  # Rotate left
+                            
+                        elif window_center_x > image_center_x + 20:
+                            rotation_command = -10  # Rotate right
+                        else:
+                            rotation_command = 1 # Good position
                                     
         
     if len(contours_white) > 0:
