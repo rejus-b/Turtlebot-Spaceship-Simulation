@@ -16,6 +16,9 @@ from geometry_msgs.msg import Twist
 from .detect_window import detect_window
 from .detect_button import detect_button
 import time
+import tf2_ros.buffer
+from geometry_msgs.msg import TransformStamped
+# import tf2_ros.listener
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -73,6 +76,7 @@ class RoboNaut(Node):
         
         self.robot_xyz = [0,0,0]
         self.detected_colour = 0
+        self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw (Unordered rn)
         
         #movement flags
         self.spun = False
@@ -80,6 +84,11 @@ class RoboNaut(Node):
         self.explore = False # Test boolean for room explore once
         self.move_to_entrance_one = True # check if robot has moved to enterance one
         self.at_entrance_one = False # check if currently at entrance one
+        
+        
+        # attempts for odomentry orientation
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -139,6 +148,17 @@ class RoboNaut(Node):
         self.robot_xyz[1] = msg.pose.pose.position.y
         self.robot_xyz[2] = msg.pose.pose.position.z
         # print("X:", x, "Y:", y, "Z:", z)
+        
+        # care about yaw only
+
+        while True:
+            try:
+                # self.get_logger().info('Attempting to get position')
+                tf_output = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time(), rclpy.duration.Duration(seconds=0.1))
+                self.get_logger().info(tf_output.transform.translation)
+                break
+            except Exception as e:
+                print(e)
         
     def camera_view(self, data):
         try:
