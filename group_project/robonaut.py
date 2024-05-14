@@ -16,6 +16,7 @@ from geometry_msgs.msg import Twist
 from .detect_window import detect_window
 from .detect_button import detect_button
 import time
+import math
 import tf2_ros.buffer
 from geometry_msgs.msg import TransformStamped
 # import tf2_ros.listener
@@ -77,14 +78,18 @@ class RoboNaut(Node):
         self.robot_xyz = [0,0,0]
         self.detected_colour = 0
         self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw (Unordered rn)
+        self.closest_room = [0,0]
         
         #movement flags
         self.spun = False
         self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
         self.explore = False # Test boolean for room explore once
-        self.move_to_entrance_one = True # check if robot has moved to enterance one
-        self.at_entrance_one = False # check if currently at entrance one
-        
+        self.move_to_entrance = True # check if robot has moved to enterance one
+        self.at_entrance = False # check if currently at entrance one
+        self.room_calc = False
+        self.close_room_flag = 0
+        self.module_one_colour = 0
+        self.module_two_colour = 0
         
         # attempts for odomentry orientation
         self.tf_buffer = tf2_ros.Buffer()
@@ -144,13 +149,7 @@ class RoboNaut(Node):
         # NOTE: if you want, you can use the feedback while the robot is moving.
     
     def odom_callback(self, msg):
-        self.robot_xyz[0] = msg.pose.pose.position.x
-        self.robot_xyz[1] = msg.pose.pose.position.y
-        self.robot_xyz[2] = msg.pose.pose.position.z
-        # print("X:", x, "Y:", y, "Z:", z)
-        
-        # care about yaw only
-
+        tf_output = 1
         while True:
             try:
                 # self.get_logger().info('Attempting to get position')
@@ -160,6 +159,15 @@ class RoboNaut(Node):
             except Exception as e:
                 print(e)
                 break
+        if tf_output != 1:    
+            self.robot_xyz[0] = tf_output.transform.translation.x
+            self.robot_xyz[1] = tf_output.transform.translation.y
+            self.robot_xyz[2] = tf_output.transform.translation.y
+        else:
+            self.robot_xyz[0] = msg.pose.pose.position.x
+            self.robot_xyz[1] = msg.pose.pose.position.y
+            self.robot_xyz[2] = msg.pose.pose.position.z
+
         
     def camera_view(self, data):
         try:
@@ -168,7 +176,7 @@ class RoboNaut(Node):
             print("An error has occoured while trying to convert image in cv: ", e)
         
         # detect window
-        window_detected = detect_window(self.image)
+        #window_detected = detect_window(self.image)
         self.detected_colour = detect_button(self.image)
         
         
@@ -297,30 +305,45 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     thread = threading.Thread(target=rclpy.spin, args=(robonaut,), daemon=True)
     thread.start()
-    
 
     try:
         while rclpy.ok():
-            #print(robonaut.robot_xyz[0],robonaut.robot_xyz[1])
-            '''
-            if robonaut.move_to_entrance_one == True:
-                robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
-                robonaut.move_to_entrance_one = False
-            if abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) <= 0.2 and abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y) <= 0.2:
-                robonaut.at_entrance_one = True
-            if robonaut.at_entrance_one and not robonaut.spun:
+            time.sleep(1) # robot needs beauty sleep to work
+            if not robonaut.room_calc:
+                room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
+                room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
+                if room_one_dis <= room_two_dis:
+                    robonaut.closest_room[0] = robonaut.coordinates.module_1.entrance.x
+                    robonaut.closest_room[1] = robonaut.coordinates.module_1.entrance.y
+                    robonaut.close_room_flag = 1
+                else:
+                    robonaut.closest_room[0] = robonaut.coordinates.module_2.entrance.x
+                    robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
+                    robonaut.close_room_flag = 2
+                robonaut.room_calc = True
+
+            if robonaut.move_to_entrance:
+                robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
+                robonaut.move_to_entrance = False
+                
+            
+            if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
+                robonaut.at_entrance = True
+                
+            if robonaut.at_entrance and not robonaut.spun:
                 robonaut.get_logger().info('Spin begin')
-                robonaut.rotation(2 * 3.141597)
+                robonaut.rotation(2 * 3.141597) 
                 #robonaut.spun = True
-                '''
-                '''
-            if robonaut.at_entrance_one:
+
+            if robonaut.at_entrance:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
+                    if robonaut.module_one_colour == 0 and robonaut.module_two_colour == 0:
+                        pass
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
                     
-            
+            '''
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 robonaut.rotation(2 * 3.141597)

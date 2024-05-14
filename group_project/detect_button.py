@@ -26,45 +26,37 @@ def detect_button(image):
         # Filter out everything but a particular colour using the cv2.inRange() method
     green_mask = cv2.inRange(Hsv_image, hsv_green_lower, hsv_green_upper)
     red_mask = cv2.inRange(Hsv_image, hsv_red_lower, hsv_red_upper)
+    
+    masked_image_green = cv2.bitwise_and(image, image, mask=green_mask)
+    masked_image_red = cv2.bitwise_and(image, image, mask=red_mask)
 
-        # Apply the mask to the original image using the cv2.bitwise_and() method
-        # As mentioned on the worksheet the best way to do this is to bitwise and an image with itself and pass the mask to the mask parameter
+    gray_green = cv2.cvtColor(masked_image_green, cv2.COLOR_BGR2GRAY)
+    blurred_green = cv2.GaussianBlur(gray_green, (9, 9), 2)
+    
+    gray_red = cv2.cvtColor(masked_image_red, cv2.COLOR_BGR2GRAY)
+    blurred_red = cv2.GaussianBlur(gray_red, (9, 9), 2)
+    
+    circles_green = cv2.HoughCircles(blurred_green, cv2.HOUGH_GRADIENT, dp=1, minDist=20,
+                               param1=50, param2=30, minRadius=0, maxRadius=0)
+    
+    circles_red = cv2.HoughCircles(blurred_red, cv2.HOUGH_GRADIENT, dp=1, minDist=20,
+                               param1=50, param2=30, minRadius=0, maxRadius=0)
+    
     green_image = cv2.bitwise_and(image, image, mask=green_mask)
     red_image = cv2.bitwise_and(image, image, mask=red_mask)
-
-        # Find the contours that appear within the certain colour mask using the cv2.findContours() method
-        # For <mode> use cv2.RETR_LIST for <method> use cv2.CHAIN_APPROX_SIMPLE
-        #grey_green = cv2.cvtColor(green_image, cv2.COLOR_BGR2GRAY)
-        #grey_red = cv2.cvtColor(red_image, cv2.COLOR_BGR2GRAY)
-    contours_green, hierarchy = cv2.findContours(green_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours_red, hierarchy = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    c_green = 0
-    c_red = 0
-    
     gr_image = cv2.bitwise_or(green_image,red_image)
     
     cv2.namedWindow('button_detector',cv2.WINDOW_NORMAL) 
     cv2.imshow('button_detector', gr_image)
     cv2.resizeWindow('button_detector', 320, 240)
     
-    # Loop over the contours
-    if (len(contours_green)>0 or len(contours_red)>0):
-            # There are a few different methods for identifying which contour is the biggest
-            # Loop through the list and keep track of which contour is biggest or
-            # Use the max() method to find the largest contour
-            
-        c_green = max(contours_green, key=cv2.contourArea, default=None)
-        c_red = max(contours_red, key=cv2.contourArea, default=None)
+    if circles_green is not None:
+        return green_found
+    
+    if circles_red is not None:
+        return red_found
+   
 
-
-            #Check if the area of the shape you want is big enough to be considered
-            # If it is then change the flag for that colour to be True(1)
-        if (c_green is not None and cv2.contourArea(c_green) > 20): #<What do you think is a suitable area?>
-                # Alter the value of the flag
-            return green_found
-
-            
-        if ( c_red is not None and cv2.contourArea(c_red) > 20):
-            return red_found
+    
         
 
