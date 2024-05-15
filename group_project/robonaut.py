@@ -390,14 +390,14 @@ def main():
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
                     
-            if (robonaut.explore == False):
-                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-                # robonaut.rate.sleep()   
-                robonaut.rotation(2 * 3.141597)
-                robonaut.explore_room(1, 2) 
-                # robonaut.rate.sleep()   
-                robonaut.rotation(2 * 3.141597)
-                robonaut.explore = True
+            # if (robonaut.explore == False):
+            #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+            #     # robonaut.rate.sleep()   
+            #     robonaut.rotation(2 * 3.141597)
+            #     robonaut.explore_room(1, 2) 
+            #     # robonaut.rate.sleep()   
+            #     robonaut.rotation(2 * 3.141597)
+            #     robonaut.explore = True
             # if robonaut.at_entrance:
             #     if robonaut.detected_colour == 1:
             #         robonaut.get_logger().info('At green room')
