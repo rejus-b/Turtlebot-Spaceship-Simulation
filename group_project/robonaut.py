@@ -21,8 +21,6 @@ import tf2_ros.buffer
 from geometry_msgs.msg import TransformStamped
 # import tf2_ros.listener
 import numpy as np
-from .picture_processing import *
-from .stitcher import perform_stitch
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -83,6 +81,7 @@ class RoboNaut(Node):
         self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw
         self.closest_room = [0,0]
         
+        self.windows_queue = []
         #movement flags
         self.spun = False
         self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
@@ -172,6 +171,7 @@ class RoboNaut(Node):
             self.robot_xyz[2] = msg.pose.pose.position.z
 
         quaternion = [None, None, None, None]
+
         # care about yaw only
         
         quaternion[0] = msg.pose.pose.orientation.x
@@ -231,7 +231,13 @@ class RoboNaut(Node):
         desired_velocity.linear.x = 0.0  # Send zero velocity to stop the robot
         self.publisher.publish(desired_velocity)
         
-        
+    # adds robot xy and angle to queue as a list
+    def enqueue_window(self):
+        values = [self.robot_xyz[0],self.robot_xyz[1],self.robot_orientation[0],self.robot_orientation[1],self.robot_orientation[2]]
+        self.windows_queue.append(values)
+    
+    def dequeue_window(self):
+        return self.windows_queue.pop()
         
         
     # Function to enter the nearby room and walk around a bit
@@ -296,21 +302,13 @@ class RoboNaut(Node):
         elif self.explore_room_flag == False:
             self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
             while (self.explore_room_flag != True):
-                # print("Im here")
+                print("Im here")
                 self.send_goal(room.x, location + increment, 0)
                 increment += room.y / 10 # The increment is room divided into 20ths
                 if increment > room.y * 2: # If you have exceeded the entire room size stop
                     break
                 elif self.explore_room_flag == True:
                     self.get_logger().info(f'The goal was accepted: {location}')
-                    
-        while abs(self.robot_xyz[1] - location) > 0.3 or abs(self.robot_xyz[0] - room.x) > 0.3:
-            # self.get_logger().info(f"Y: {self.robot_xyz[1] - location} and X diff: {self.robot_xyz[0] - room.x} ")
-            # pass
-            self.rate.sleep()
-            
-                         
-            
 
         #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         
@@ -339,10 +337,6 @@ class RoboNaut(Node):
         yaw_z = np.arctan2(t3, t4)
         
         return [roll_x, pitch_y, yaw_z] # Radian return
-    
-    
-    # Function to find the centre wall of two adjacent rooms, returns some information about how to face away from it
-    # def find_centre(self, )
         
 
 def main():
@@ -359,87 +353,53 @@ def main():
 
     try:
         while rclpy.ok():
-            # time.sleep(1) # robot needs beauty sleep to work
-            # if not robonaut.room_calc:
-            #     room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
-            #     room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
-            #     if room_one_dis <= room_two_dis:
-            #         robonaut.closest_room[0] = robonaut.coordinates.module_1.entrance.x
-            #         robonaut.closest_room[1] = robonaut.coordinates.module_1.entrance.y
-            #         robonaut.close_room_flag = 1
-            #     else:
-            #         robonaut.closest_room[0] = robonaut.coordinates.module_2.entrance.x
-            #         robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
-            #         robonaut.close_room_flag = 2
-            #     robonaut.room_calc = True
+            time.sleep(1) # robot needs beauty sleep to work
+            if not robonaut.room_calc:
+                room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
+                room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
+                if room_one_dis <= room_two_dis:
+                    robonaut.closest_room[0] = robonaut.coordinates.module_1.entrance.x
+                    robonaut.closest_room[1] = robonaut.coordinates.module_1.entrance.y
+                    robonaut.close_room_flag = 1
+                else:
+                    robonaut.closest_room[0] = robonaut.coordinates.module_2.entrance.x
+                    robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
+                    robonaut.close_room_flag = 2
+                robonaut.room_calc = True
 
-            # if robonaut.move_to_entrance:
-            #     robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
-            #     robonaut.move_to_entrance = False
+            if robonaut.move_to_entrance:
+                robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
+                robonaut.move_to_entrance = False
                 
             
-            # if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
-            #     robonaut.at_entrance = True
+            if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
+                robonaut.at_entrance = True
                 
-            # if robonaut.at_entrance and not robonaut.spun:
-            #     robonaut.get_logger().info('Spin begin')
-            #     robonaut.rotation(2 * 3.141597) 
-            #     #robonaut.spun = True
+            if robonaut.at_entrance and not robonaut.spun:
+                robonaut.get_logger().info('Spin begin')
+                robonaut.rotation(2 * 3.141597) 
+                #robonaut.spun = True
 
             if robonaut.at_entrance:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
-                    if robonaut.module_one_colour == 0 and robonaut.module_two_colour == 0:
-                        pass
+                    if robonaut.close_room_flag == 1:
+                        robonaut.module_one_colour = 1
+                    elif robonaut.close_room_flag == 2:
+                        robonaut.module_two_colour = 1
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
-                    
-            # if (robonaut.explore == False):
-            #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-            #     # robonaut.rate.sleep()   
-            #     robonaut.rotation(2 * 3.141597)
-            #     robonaut.explore_room(1, 2) 
-            #     # robonaut.rate.sleep()   
-            #     robonaut.rotation(2 * 3.141597)
-            #     robonaut.explore = True
-            # if robonaut.at_entrance:
-            #     if robonaut.detected_colour == 1:
-            #         robonaut.get_logger().info('At green room')
-            #         if robonaut.close_room_flag == 1:
-            #             robonaut.module_one_colour = 1
-            #         elif robonaut.close_room_flag == 2:
-            #             robonaut.module_two_colour = 1
-            #     elif robonaut.detected_colour == 2:
-            #         robonaut.get_logger().info('At red room')
-            #         if robonaut.close_room_flag == 1:
-            #             robonaut.module_one_colour = 2
-            #         elif robonaut.close_room_flag == 2:
-            #             robonaut.module_two_colour = 2
+                    if robonaut.close_room_flag == 1:
+                        robonaut.module_one_colour = 2
+                    elif robonaut.close_room_flag == 2:
+                        robonaut.module_two_colour = 2
             '''        
-            # if (robonaut.explore == False):
-            #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-            #     robonaut.rotation(2 * 3.141597)
-            #     robonaut.explore_room(1, 2) 
-            #     robonaut.explore = True
+            if (robonaut.explore == False):
+                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+                robonaut.rotation(2 * 3.141597)
+                robonaut.explore_room(1, 2) 
+                robonaut.explore = True
             ''' 
-            
-                        
-            if cv2.waitKey(1) == ord("i"):
-                robonaut.get_logger().info("i was clicked")
-                output_crop = from_frame_to_image_for_ml(robonaut.image, "frame_cropped_2")
-                robonaut.get_logger().info(f"here the pic: {output_crop}")
-                
-            name1 = "frame_cropped"
-            name2 = "frame_cropped_2" 
-            
-            resize_jpg_pictures(name1, name2)
-            
-            image1 = from_jpg_to_cv2(name2)
-            image2 = from_jpg_to_cv2(name1)
-            
-            perform_stitch(image1, image2, "stitched_image")
-            
-                
                 
             pass
     except ROSInterruptException:
