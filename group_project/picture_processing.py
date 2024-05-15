@@ -1,6 +1,7 @@
 import cv2
 from cv_bridge import CvBridge
 import os
+import numpy as np
 
 # Initialize CvBridge
 bridge = CvBridge()
@@ -70,7 +71,7 @@ input:
 -filename of the first pic
 -filename of the second pic
 """
-def resize_jpg_pictures(name1, name2): 
+def resize_png_pictures(name1, name2): 
     
     path_1 = find_image_location(name1 + ".png", os.getcwd()) # find name1 frm current path
     path_2 = find_image_location(name2 + ".png", os.getcwd()) 
@@ -105,7 +106,7 @@ input:
 output:
 -cv2 image
 """
-def from_jpg_to_cv2(filename:str):
+def from_png_to_cv2(filename:str):
     
     path= find_image_location(filename + ".png", os.getcwd()) # find name1 frm current path
     
@@ -113,3 +114,88 @@ def from_jpg_to_cv2(filename:str):
     image1 = cv2.imread(path)
 
     return image1
+
+
+"""
+Function to detect earth and moon and calculate the distances
+"""
+def calculate_distances_from_panorama(panorama_pic):
+    
+    height_pic, width_pic, _ = panorama_pic.shape
+    scaling_factor = 3
+    
+
+    biggest_circles = detect_2_biggest_circle(panorama_pic)
+    
+    if biggest_circles:
+        biggest_circle_diameters = calculate_cirlcles_diameter(biggest_circles)
+        planets_real_diameter = calculate_real_diameter(biggest_circle_diameters)
+        distance_to_earth = scaling_factor*((planets_real_diameter[0] * height_pic) / biggest_circle_diameters[0])
+        distance_to_moon = scaling_factor * ((planets_real_diameter[1] * height_pic) / biggest_circle_diameters[1])
+        #return "Moon: " + str(distance_to_moon) + " Earth: " + str(distance_to_earth)
+        return f"Biggest circles diam: {biggest_circle_diameters}, planets real diam: {planets_real_diameter}, height: {height_pic}, moon: {distance_to_moon}, earth: {distance_to_earth}"
+        
+    else:
+        return ("error, nothing happened")
+
+        
+        
+def detect_2_biggest_circle(panorama_pic):
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(panorama_pic, cv2.COLOR_BGR2GRAY)
+
+    # Apply Gaussian blur to reduce noise
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Detect circles using Hough Circle Transform
+    circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=20,
+                            param1=50, param2=30, minRadius=10, maxRadius=100)
+
+    # If circles are detected
+    if circles is not None:
+        # Convert the (x, y, r) coordinates to integers
+        circles = np.round(circles[0, :]).astype("int")
+
+        # Sort circles based on radius in descending order
+        circles = sorted(circles, key=lambda x: x[2], reverse=True)
+
+        # Take the first two circles as the biggest ones
+        biggest_circles = circles[:2]
+        
+        return biggest_circles
+    else:
+        return None
+    
+    
+def calculate_cirlcles_diameter(circles):
+        # Initialize a list to store the diameters of the biggest circles
+    biggest_circle_diameters = []
+    
+        # Loop through each circle
+    for circle in circles:
+        # Extract the coordinates and radius of the circle
+        x, y, radius = circle
+
+        # Calculate the diameter by doubling the radius
+        diameter = 2 * radius
+
+        # Append the diameter to the list
+        biggest_circle_diameters.append(diameter)
+    
+    return biggest_circle_diameters
+
+    
+
+def calculate_real_diameter(biggest_circle_diameters):
+    
+    earth_real_diameter_km = 12742 #km. real diameter of the earth
+    earth_pixel_diameter_px = biggest_circle_diameters[0] #pixel diameter of the earth
+    moon_pixel_diameter_px = biggest_circle_diameters[1] #pixel diameter of the moon
+    
+    # Calculate the pixel ratio
+    pixel_ratio = moon_pixel_diameter_px / earth_pixel_diameter_px
+
+    # Calculate the real diameter of the Moon
+    moon_real_diameter_km = pixel_ratio * earth_real_diameter_km
+    
+    return [earth_real_diameter_km, moon_real_diameter_km]

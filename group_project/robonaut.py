@@ -407,9 +407,12 @@ def main():
     
     flag = True
     picture_count = 1 #will add to the pictures name to not override it
+    pictures_found = []
     
     try:
         while rclpy.ok():
+            
+            """
             #if not robonaut.slept:
             time.sleep(.5) # robot needs beauty sleep to work
                 #robonaut.slept = True
@@ -481,28 +484,38 @@ def main():
                 robonaut.rate.sleep()
                 robonaut.rotation(8 * 0.785398)
                 robonaut.explore = True
+                
+            """
 
-            '''
-                        
+                                    
             if cv2.waitKey(1) == ord("i"):
                 robonaut.get_logger().info("i was clicked")
-                output_crop = from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}")
-                robonaut.get_logger().info(f"here the pic: {output_crop}")
+                pictures_found.append(from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}"))
+                robonaut.get_logger().info(f"here the pic: {pictures_found[-1]}")
+                picture_count += 1
                 
-            name1 = "frame_cropped"
-            name2 = "frame_cropped_2" 
+            if picture_count == 3:
+                
+                name1 = "frame_cropped1"
+                name2 = "frame_cropped2" 
+                
+                resize_png_pictures(name1, name2)
+                
+                
+                # to make it more robust, we might want to save stuff just for the tutors to see
+                # and we can use an array of images that get filled with all the frames from picture taken by the robots
+                image1 = from_png_to_cv2(name2)
+                image2 = from_png_to_cv2(name1)
+                
+                
+                if flag:
+                    panoramic_pic = perform_stitch(image1, image2, "panorama")
+                    robonaut.get_logger().info("panoramic pic stitched")
+                    distances = calculate_distances_from_panorama(panoramic_pic)
+                    robonaut.get_logger().info(f"{distances}")
+                    flag = False
             
-            resize_jpg_pictures(name1, name2)
-            
-            image1 = from_jpg_to_cv2(name2)
-            image2 = from_jpg_to_cv2(name1)
-            
-            
-            if flag:
-                robonaut.get_logger().info(perform_stitch(image1, image2, "panorama"))
-                flag = False
-            
-                '''
+
                 
             pass
     except ROSInterruptException:

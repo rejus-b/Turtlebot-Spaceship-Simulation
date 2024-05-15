@@ -30,7 +30,7 @@ def perform_stitch( image1, image2, stitched_file_name):
             return e
             
             
-        return path
+        return stitched_image
     else:
         print("Stitching failed!")
         return None
