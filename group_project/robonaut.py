@@ -98,6 +98,9 @@ class RoboNaut(Node):
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
+        # room expo
+        self.facing_inner_wall = None 
+
         # You can access the module coordinates like so:
         # Room 1:
         #   self.coordinates.module_1.entrance.x
@@ -200,11 +203,16 @@ class RoboNaut(Node):
         cv2.waitKey(1)
     
     # rotate by a given angle
-    def rotation(self, end_angle):
+    def rotation(self, end_angle, clockwise=True):
         desired_velocity = Twist()
         # Set desired angle in radians
         # desired_velocity..... =
-        desired_velocity.angular.z = 3.141597 / 8
+        if clockwise:
+            desired_velocity.angular.z = 3.141597 / 8
+        if not clockwise:
+            desired_velocity.angular.z = -(3.141597 / 8)
+            end_angle = -(end_angle)
+            
         # store current time: t0
         t0, _ = self.get_clock().now().seconds_nanoseconds()
 
@@ -221,7 +229,12 @@ class RoboNaut(Node):
             # Calculate current angle
             current_angle = desired_velocity.angular.z * (t1 - t0)
 
+            self.check_orientation(self.find_centre(1))
             self.rate.sleep()
+            
+            
+
+
 
         # set velocity to zero to stop the robot
         self.stop()
@@ -274,7 +287,7 @@ class RoboNaut(Node):
             self.get_logger().info(f'The room_step provided was no accurate: {room_step}.')
         
         # Send the goal
-        self.send_goal(room.x, location, 0)
+        self.send_goal(room.x, location, self.find_centre(1))
         print(f"\Location is : {location}")
 
         # Set a local increment
@@ -297,14 +310,14 @@ class RoboNaut(Node):
             self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
             while (self.explore_room_flag != True):
                 # print("Im here")
-                self.send_goal(room.x, location + increment, 0)
+                self.send_goal(room.x, location + increment, self.find_centre(1))
                 increment += room.y / 10 # The increment is room divided into 20ths
                 if increment > room.y * 2: # If you have exceeded the entire room size stop
                     break
                 elif self.explore_room_flag == True:
                     self.get_logger().info(f'The goal was accepted: {location}')
                     
-        while abs(self.robot_xyz[1] - location) > 0.3 or abs(self.robot_xyz[0] - room.x) > 0.3:
+        while (abs(self.robot_xyz[1] - location) > 0.3 or abs(self.robot_xyz[0] - room.x) > 0.3) :
             # self.get_logger().info(f"Y: {self.robot_xyz[1] - location} and X diff: {self.robot_xyz[0] - room.x} ")
             # pass
             self.rate.sleep()
@@ -342,8 +355,59 @@ class RoboNaut(Node):
     
     
     # Function to find the centre wall of two adjacent rooms, returns some information about how to face away from it
-    # def find_centre(self, )
-        
+    def find_centre(self, current_room):
+        if current_room == 1:
+            room_midpoint = self.coordinates.module_1.center
+        elif current_room == 2:
+            room_midpoint = self.coordinates.module_2.center
+        else:
+            self.get_logger().info(f'A bad room code has been provided: {current_room}')
+            return None  # Return None if room code is invalid
+
+        # Calculate the midpoint between the two room centres directly
+        overall_midpoint_x = (self.coordinates.module_1.center.x + self.coordinates.module_2.center.x) / 2
+        overall_midpoint_y = (self.coordinates.module_1.center.y + self.coordinates.module_2.center.y) / 2
+
+        # Calculate direction vector from overall midpoint to room midpoint
+        direction_x = room_midpoint.x - overall_midpoint_x
+        direction_y = room_midpoint.y - overall_midpoint_y
+
+        # Calculate orientation angle using atan2 function
+        orientation_angle = math.atan2(direction_y, direction_x)
+
+        return orientation_angle
+    
+    def calculate_inverse_direction(self, orientation_angle):
+        # Calculate inverse direction by adding or subtracting π radians (180 degrees)
+        inverse_angle = orientation_angle + math.pi  # Add π to get inverse direction
+
+        # Normalize the angle to the range [-π, π]
+        inverse_angle = math.atan2(math.sin(inverse_angle), math.cos(inverse_angle))
+
+        return inverse_angle
+    
+    def check_orientation(self, orientation_angle):
+        # Calculate inverse direction
+        orientation_angle = self.calculate_inverse_direction(orientation_angle)
+
+        # Define the wall angle range based on inverse angle +- 30 degrees
+        wall_angle_start = orientation_angle - math.radians(30)
+        wall_angle_end = orientation_angle + math.radians(30)
+
+        # Normalize wall angle range to [-pi, +pi]
+        wall_angle_start = math.atan2(math.sin(wall_angle_start), math.cos(wall_angle_start))
+        wall_angle_end = math.atan2(math.sin(wall_angle_end), math.cos(wall_angle_end))
+
+        # Check if the orientation angle falls within the adjusted wall angle range
+        if wall_angle_start <= orientation_angle <= wall_angle_end:
+            self.facing_inner_wall = True
+            self.get_logger().info("FACING INSIDE")
+        else:
+            self.facing_inner_wall = False
+            self.get_logger().info("OUTSIDE")
+            
+            
+    
 
 def main():
     def signal_handler(sig, frame):
@@ -394,14 +458,19 @@ def main():
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
                     
-            # if (robonaut.explore == False):
-            #     robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-            #     # robonaut.rate.sleep()   
-            #     robonaut.rotation(2 * 3.141597)
+            if (robonaut.explore == False):
+                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+                robonaut.rate.sleep()
+                robonaut.rotation(8 * 0.785398)
+                # robonaut.orientate_to_yaw(robonaut.robot_orientation[2] + 2.5 * 0.785398)
+                # print("ROOM", robonaut.find_centre(1))
+                # robonaut.send_goal(robonaut.robot_xyz[0], robonaut.robot_xyz[1], robonaut.find_centre(1))
+                # robonaut.rotation(robonaut.find_centre(1))
+                # robonaut.rotation(2 * 3.141597)
             #     robonaut.explore_room(1, 2) 
             #     # robonaut.rate.sleep()   
             #     robonaut.rotation(2 * 3.141597)
-            #     robonaut.explore = True
+                robonaut.explore = True
             # if robonaut.at_entrance:
             #     if robonaut.detected_colour == 1:
             #         robonaut.get_logger().info('At green room')
