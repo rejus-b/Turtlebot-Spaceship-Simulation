@@ -80,7 +80,7 @@ class RoboNaut(Node):
         self.rate = self.create_rate(10)  # 10 Hz
         
         self.robot_xyz = [0,0,0]
-        self.detected_colour = 0
+        self.detected_colour = None # If a button colour is currentl detected
         self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw
         self.closest_room = [0,0]
         
@@ -199,6 +199,7 @@ class RoboNaut(Node):
         
         # detect window
         self.detected_colour = detect_button(self.image)
+        
         #window_detected = detect_window(self.image)
         
         
@@ -225,7 +226,7 @@ class RoboNaut(Node):
         current_angle = 0
         # loop to publish the velocity estimate until desired angle achieved
         # current angle = current angular velocity * (t1 - t0)
-        while (current_angle < end_angle):
+        while (current_angle < end_angle and self.detected_colour == None): # If button found stop spinning
             # Publish the velocity
             self.publisher.publish(desired_velocity)
 
@@ -425,8 +426,9 @@ def main():
                     robonaut.closest_room[1] = robonaut.coordinates.module_2.entrance.y
                     robonaut.close_room_flag = 2
                 robonaut.room_calc = True
+                FLAG_can_move_to_entrance = True
 
-            if robonaut.move_to_entrance:
+            if robonaut.move_to_entrance and FLAG_can_move_to_entrance:
                 robonaut.send_goal(robonaut.closest_room[0],robonaut.closest_room[1],0)  # example coordinates
                 robonaut.move_to_entrance = False
                 
@@ -438,6 +440,11 @@ def main():
                 robonaut.get_logger().info('Spin begin')
                 robonaut.rotation(2 * 3.141597) 
                 #robonaut.spun = True
+
+            # try:
+            #     robonaut.get_logger().info(f"Colour found : {robonaut.detected_colour}")
+            # finally:
+            #     pass
 
             explore_room_flag= None
             if robonaut.at_entrance:

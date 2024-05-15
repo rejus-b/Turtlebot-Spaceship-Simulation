@@ -51,11 +51,11 @@ def detect_button(image):
     cv2.resizeWindow('button_detector', 320, 240)
     
     if circles_green is not None:
-        #print("GREEN FOUND")
+        # print("GREEN FOUND")
         return green_found
     
     if circles_red is not None:
-        #print (" RED FOUND")
+        # print (" RED FOUND")
         return red_found
    
 
