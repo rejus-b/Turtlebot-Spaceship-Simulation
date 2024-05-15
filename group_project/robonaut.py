@@ -405,6 +405,7 @@ def main():
     thread.start()
     
     flag = True
+    picture_count = 1 #will add to the pictures name to not override it
     
     try:
         while rclpy.ok():
@@ -478,7 +479,7 @@ def main():
                         
             if cv2.waitKey(1) == ord("i"):
                 robonaut.get_logger().info("i was clicked")
-                output_crop = from_frame_to_image_for_ml(robonaut.image, "frame_cropped_2")
+                output_crop = from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}")
                 robonaut.get_logger().info(f"here the pic: {output_crop}")
                 
             name1 = "frame_cropped"
@@ -491,7 +492,7 @@ def main():
             
             
             if flag:
-                robonaut.get_logger().info(perform_stitch(image1, image2, "stitched_image"))
+                robonaut.get_logger().info(perform_stitch(image1, image2, "panorama"))
                 flag = False
             
                 '''

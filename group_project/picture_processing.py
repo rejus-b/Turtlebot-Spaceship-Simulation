@@ -31,7 +31,7 @@ output: either the picture in array or a string containing the error
 def from_frame_to_image_for_ml(frame, image_name:str):
     try:
         
-        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", image_name + ".jpg")
+        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", image_name + ".png")
 
         # Convert the image to grayscale
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -72,8 +72,8 @@ input:
 """
 def resize_jpg_pictures(name1, name2): 
     
-    path_1 = find_image_location(name1 + ".jpg", os.getcwd()) # find name1 frm current path
-    path_2 = find_image_location(name2 + ".jpg", os.getcwd()) 
+    path_1 = find_image_location(name1 + ".png", os.getcwd()) # find name1 frm current path
+    path_2 = find_image_location(name2 + ".png", os.getcwd()) 
     
     # Load the two images
     image1 = cv2.imread(path_1)
@@ -107,7 +107,7 @@ output:
 """
 def from_jpg_to_cv2(filename:str):
     
-    path= find_image_location(filename + ".jpg", os.getcwd()) # find name1 frm current path
+    path= find_image_location(filename + ".png", os.getcwd()) # find name1 frm current path
     
     # Load the images using absolute paths
     image1 = cv2.imread(path)

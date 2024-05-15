@@ -20,7 +20,7 @@ def perform_stitch( image1, image2, stitched_file_name):
         
         try:
         
-            path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", stitched_file_name + ".jpg")
+            path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", stitched_file_name + ".png")
             
             
             # Save the cropped poster image to a file
