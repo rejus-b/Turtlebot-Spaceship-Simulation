@@ -22,6 +22,8 @@ import tf2_ros.buffer
 from geometry_msgs.msg import TransformStamped
 # import tf2_ros.listener
 import numpy as np
+from .picture_processing import *
+from .stitcher import *
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -351,6 +353,8 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     thread = threading.Thread(target=rclpy.spin, args=(robonaut,), daemon=True)
     thread.start()
+    
+    flag = True
 
     try:
         while rclpy.ok():
@@ -403,6 +407,27 @@ def main():
                 robonaut.explore_room(1, 2) 
                 robonaut.explore = True
             ''' 
+            
+                        
+            if cv2.waitKey(1) == ord("i"):
+                robonaut.get_logger().info("i was clicked")
+                output_crop = from_frame_to_image_for_ml(robonaut.image, "frame_cropped_2")
+                robonaut.get_logger().info(f"here the pic: {output_crop}")
+                
+            name1 = "frame_cropped"
+            name2 = "frame_cropped_2" 
+            
+            resize_jpg_pictures(name1, name2)
+            
+            image1 = from_jpg_to_cv2(name2)
+            image2 = from_jpg_to_cv2(name1)
+            
+            
+            if flag:
+                robonaut.get_logger().info(perform_stitch(image1, image2, "stitched_image"))
+                flag = False
+            
+                
                 
             pass
     except ROSInterruptException:

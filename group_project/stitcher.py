@@ -2,8 +2,6 @@ import cv2
 import numpy as np
 import os
 
-from group_project.picture_processing import find_image_location
-
 
 def perform_stitch( image1, image2, stitched_file_name):
     
@@ -20,14 +18,19 @@ def perform_stitch( image1, image2, stitched_file_name):
 
         cv2.resizeWindow('Blended Image',1280,960)
         
-        path = find_image_location(stitched_file_name + ".jpg", os.getcwd())
+        try:
         
-        
-        # Save the cropped poster image to a file
-        done = cv2.imwrite(path, stitched_image)
+            path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", stitched_file_name + ".jpg")
             
             
-        return stitched_image
+            # Save the cropped poster image to a file
+            done = cv2.imwrite(path, stitched_image)
+            
+        except Exception as e:
+            return e
+            
+            
+        return path
     else:
         print("Stitching failed!")
         return None

@@ -1,7 +1,5 @@
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-import numpy as np
 import os
 
 # Initialize CvBridge
@@ -33,8 +31,8 @@ output: either the picture in array or a string containing the error
 def from_frame_to_image_for_ml(frame, image_name:str):
     try:
         
-        path = find_image_location(image_name + ".jpg", os.getcwd())
-        
+        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", image_name + ".jpg")
+
         # Convert the image to grayscale
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
