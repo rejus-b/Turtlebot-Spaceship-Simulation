@@ -339,6 +339,10 @@ class RoboNaut(Node):
         yaw_z = np.arctan2(t3, t4)
         
         return [roll_x, pitch_y, yaw_z] # Radian return
+    
+    
+    # Function to find the centre wall of two adjacent rooms, returns some information about how to face away from it
+    # def find_centre(self, )
         
 
 def main():
