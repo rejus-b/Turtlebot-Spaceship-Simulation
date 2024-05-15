@@ -86,6 +86,7 @@ class RoboNaut(Node):
         
         self.windows_queue = []
         #movement flags
+        self.slept = False
         self.spun = False
         self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
         self.explore = False # Test boolean for room explore once
@@ -95,6 +96,8 @@ class RoboNaut(Node):
         self.close_room_flag = 0
         self.module_one_colour = 0
         self.module_two_colour = 0
+        self.room_found = False
+        self.stop_one = False
         
         # attempts for odomentry orientation
         self.tf_buffer = tf2_ros.Buffer()
@@ -195,8 +198,8 @@ class RoboNaut(Node):
             print("An error has occoured while trying to convert image in cv: ", e)
         
         # detect window
-        #window_detected = detect_window(self.image)
         self.detected_colour = detect_button(self.image)
+        #window_detected = detect_window(self.image)
         
         
         #show camera feed
@@ -232,7 +235,6 @@ class RoboNaut(Node):
             # Calculate current angle
             current_angle = desired_velocity.angular.z * (t1 - t0)
 
-            self.check_orientation(self.find_centre(1))
             self.rate.sleep()
             
             
@@ -403,12 +405,13 @@ def main():
     thread.start()
     
     flag = True
-
+    
     try:
         while rclpy.ok():
-            time.sleep(1) # robot needs beauty sleep to work
-            # detect_planets("src/group-project-group-5/group_project/frame_cropped.jpg")
-            '''
+            #if not robonaut.slept:
+            time.sleep(.5) # robot needs beauty sleep to work
+                #robonaut.slept = True
+            
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
                 room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
@@ -427,7 +430,7 @@ def main():
                 robonaut.move_to_entrance = False
                 
             
-            if abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.5 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.5:
+            if (abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.6 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.6):
                 robonaut.at_entrance = True
                 
             if robonaut.at_entrance and not robonaut.spun:
@@ -435,54 +438,43 @@ def main():
                 robonaut.rotation(2 * 3.141597) 
                 #robonaut.spun = True
 
+            explore_room_flag= None
             if robonaut.at_entrance:
                 if robonaut.detected_colour == 1:
                     robonaut.get_logger().info('At green room')
                     if robonaut.close_room_flag == 1:
                         robonaut.module_one_colour = 1
+                        explore_room_flag = 1
+                        robonaut.room_found = True
+                        robonaut.spun = True
                     elif robonaut.close_room_flag == 2:
                         robonaut.module_two_colour = 1
+                        explore_room_flag = 2
+                        robonaut.room_found = True
+                        robonaut.spun = True
                 elif robonaut.detected_colour == 2:
                     robonaut.get_logger().info('At red room')
-                    
-            if (robonaut.explore == False):
-                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-                robonaut.rate.sleep()
-                robonaut.rotation(8 * 0.785398)
-                # robonaut.orientate_to_yaw(robonaut.robot_orientation[2] + 2.5 * 0.785398)
-                # print("ROOM", robonaut.find_centre(1))
-                # robonaut.send_goal(robonaut.robot_xyz[0], robonaut.robot_xyz[1], robonaut.find_centre(1))
-                # robonaut.rotation(robonaut.find_centre(1))
-                # robonaut.rotation(2 * 3.141597)
-            #     robonaut.explore_room(1, 2) 
-            #     # robonaut.rate.sleep()   
-            #     robonaut.rotation(2 * 3.141597)
-                robonaut.explore = True
-            # if robonaut.at_entrance:
-            #     if robonaut.detected_colour == 1:
-            #         robonaut.get_logger().info('At green room')
-            #         if robonaut.close_room_flag == 1:
-            #             robonaut.module_one_colour = 1
-            #         elif robonaut.close_room_flag == 2:
-            #             robonaut.module_two_colour = 1
-            #     elif robonaut.detected_colour == 2:
-            #         robonaut.get_logger().info('At red room')
-            #         if robonaut.close_room_flag == 1:
-            #             robonaut.module_one_colour = 2
-            #         elif robonaut.close_room_flag == 2:
-            #             robonaut.module_two_colour = 2
                     if robonaut.close_room_flag == 1:
                         robonaut.module_one_colour = 2
+                        explore_room_flag = 2
+                        robonaut.room_found = True
+                        robonaut.spun = True
                     elif robonaut.close_room_flag == 2:
-                        robonaut.module_two_colour = 2'''
-            '''        
-            if (robonaut.explore == False):
-                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
-                robonaut.rotation(2 * 3.141597)
-                robonaut.explore_room(1, 2) 
+                        robonaut.module_two_colour = 2
+                        explore_room_flag = 1
+                        robonaut.room_found = True
+                        robonaut.spun = True
+                    
+            if (robonaut.explore == False) and robonaut.room_found:
+                robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
+                robonaut.rate.sleep()
+                robonaut.rotation(8 * 0.785398)
+                robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
+                robonaut.rate.sleep()
+                robonaut.rotation(8 * 0.785398)
                 robonaut.explore = True
-            ''' 
-            
+
+            '''
                         
             if cv2.waitKey(1) == ord("i"):
                 robonaut.get_logger().info("i was clicked")
@@ -502,7 +494,7 @@ def main():
                 robonaut.get_logger().info(perform_stitch(image1, image2, "stitched_image"))
                 flag = False
             
-                
+                '''
                 
             pass
     except ROSInterruptException:

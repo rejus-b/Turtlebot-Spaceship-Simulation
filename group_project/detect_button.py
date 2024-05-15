@@ -11,7 +11,7 @@ import signal
 
 green_found = 1
 red_found = 2
-sensitivity = 15
+sensitivity = 20
 
 def detect_button(image):
     hsv_red_lower = np.array([0 - sensitivity, 100, 100])
@@ -51,9 +51,11 @@ def detect_button(image):
     cv2.resizeWindow('button_detector', 320, 240)
     
     if circles_green is not None:
+        #print("GREEN FOUND")
         return green_found
     
     if circles_red is not None:
+        #print (" RED FOUND")
         return red_found
    
 
