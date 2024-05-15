@@ -1,7 +1,5 @@
 import cv2
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-import numpy as np
 import os
 
 # Initialize CvBridge
@@ -33,6 +31,8 @@ output: either the picture in array or a string containing the error
 def from_frame_to_image_for_ml(frame, image_name:str):
     try:
         
+        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", image_name + ".jpg")
+
         # Convert the image to grayscale
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
@@ -56,7 +56,7 @@ def from_frame_to_image_for_ml(frame, image_name:str):
         poster_roi = frame[y:y+h, x:x+w]
         
         # Save the cropped poster image to a file
-        done = cv2.imwrite(f"src/group-project-group-5/group_project/{image_name}.jpg", poster_roi)
+        done = cv2.imwrite(path, poster_roi)
         return poster_roi
         
     except Exception as e:
@@ -111,19 +111,5 @@ def from_jpg_to_cv2(filename:str):
     
     # Load the images using absolute paths
     image1 = cv2.imread(path)
-    
-    # Initialize CvBridge
-    bridge = CvBridge()
 
-    # Read the JPEG image
-    jpg_image = cv2.imread(path)
-
-    # Convert the image to BGR format
-    bgr_image = cv2.cvtColor(jpg_image, cv2.COLOR_BGR2RGB)
-
-    # Convert the BGR image to a ROS image message
-    ros_image_msg = bridge.cv2_to_imgmsg(bgr_image, encoding="bgr8")
-    
-    pic_cv2 = bridge.imgmsg_to_cv2(ros_image_msg, 'bgr8')
-    
-    return pic_cv2
+    return image1
