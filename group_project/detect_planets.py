@@ -19,7 +19,7 @@ class_labels = {
     10: "Venus"
 }
 
-model_path = 'group-project-group-5/group_project/detect_planets.py'
+model_path = 'src/group-project-group-5/group_project/detect_planets.py'
 
 #loading and preparing model
 def load_model(model_path):
@@ -59,7 +59,7 @@ def detect_planets(image_path):
     detected_planet = class_labels[max_index]
 
     # Print detected planet and probability for reference
-   # print(f"Detected Planet: {detected_planet}, Probability: {probabilities[max_index] * 100:.2f}%")
+    print(f"Detected Planet: {detected_planet}, Probability: {probabilities[max_index] * 100:.2f}%")
 
     return detected_planet
 

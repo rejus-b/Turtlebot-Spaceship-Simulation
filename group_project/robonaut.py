@@ -15,6 +15,7 @@ import cv2
 from geometry_msgs.msg import Twist
 from .detect_window import detect_window
 from .detect_button import detect_button
+from .detect_planets import detect_planets
 import time
 import math
 import tf2_ros.buffer
@@ -354,6 +355,8 @@ def main():
     try:
         while rclpy.ok():
             time.sleep(1) # robot needs beauty sleep to work
+            detect_planets("src/group-project-group-5/group_project/frame_cropped.jpg")
+            '''
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
                 room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
@@ -392,7 +395,7 @@ def main():
                     if robonaut.close_room_flag == 1:
                         robonaut.module_one_colour = 2
                     elif robonaut.close_room_flag == 2:
-                        robonaut.module_two_colour = 2
+                        robonaut.module_two_colour = 2'''
             '''        
             if (robonaut.explore == False):
                 robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
