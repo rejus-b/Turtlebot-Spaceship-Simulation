@@ -254,8 +254,10 @@ class RoboNaut(Node):
     def explore_room(self, room, room_step):
         # First determine which room you are trying to enter 
         if (room == 1):
+            room_code = 1
             room = self.coordinates.module_1.center
         elif (room == 2):
+            room_code = 2
             room = self.coordinates.module_2.center
         else:
             self.get_logger().info(f'A bad room code has been provided: {room}')
@@ -287,7 +289,7 @@ class RoboNaut(Node):
             self.get_logger().info(f'The room_step provided was no accurate: {room_step}.')
         
         # Send the goal
-        self.send_goal(room.x, location, self.find_centre(1))
+        self.send_goal(room.x, location, self.find_centre(room_code))
         print(f"\Location is : {location}")
 
         # Set a local increment
@@ -310,7 +312,7 @@ class RoboNaut(Node):
             self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
             while (self.explore_room_flag != True):
                 # print("Im here")
-                self.send_goal(room.x, location + increment, self.find_centre(1))
+                self.send_goal(room.x, location + increment, self.find_centre(room_code))
                 increment += room.y / 10 # The increment is room divided into 20ths
                 if increment > room.y * 2: # If you have exceeded the entire room size stop
                     break
@@ -377,36 +379,6 @@ class RoboNaut(Node):
 
         return orientation_angle
     
-    def calculate_inverse_direction(self, orientation_angle):
-        # Calculate inverse direction by adding or subtracting π radians (180 degrees)
-        inverse_angle = orientation_angle + math.pi  # Add π to get inverse direction
-
-        # Normalize the angle to the range [-π, π]
-        inverse_angle = math.atan2(math.sin(inverse_angle), math.cos(inverse_angle))
-
-        return inverse_angle
-    
-    def check_orientation(self, orientation_angle):
-        # Calculate inverse direction
-        orientation_angle = self.calculate_inverse_direction(orientation_angle)
-
-        # Define the wall angle range based on inverse angle +- 30 degrees
-        wall_angle_start = orientation_angle - math.radians(30)
-        wall_angle_end = orientation_angle + math.radians(30)
-
-        # Normalize wall angle range to [-pi, +pi]
-        wall_angle_start = math.atan2(math.sin(wall_angle_start), math.cos(wall_angle_start))
-        wall_angle_end = math.atan2(math.sin(wall_angle_end), math.cos(wall_angle_end))
-
-        # Check if the orientation angle falls within the adjusted wall angle range
-        if wall_angle_start <= orientation_angle <= wall_angle_end:
-            self.facing_inner_wall = True
-            self.get_logger().info("FACING INSIDE")
-        else:
-            self.facing_inner_wall = False
-            self.get_logger().info("OUTSIDE")
-            
-            
     
 
 def main():
