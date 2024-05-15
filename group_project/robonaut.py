@@ -170,7 +170,6 @@ class RoboNaut(Node):
             self.robot_xyz[2] = msg.pose.pose.position.z
 
         quaternion = [None, None, None, None]
-
         # care about yaw only
         
         quaternion[0] = msg.pose.pose.orientation.x
@@ -295,13 +294,21 @@ class RoboNaut(Node):
         elif self.explore_room_flag == False:
             self.get_logger().info(f'The current goal was not accepted: {location}. Trying a new goal location.')
             while (self.explore_room_flag != True):
-                print("Im here")
+                # print("Im here")
                 self.send_goal(room.x, location + increment, 0)
                 increment += room.y / 10 # The increment is room divided into 20ths
                 if increment > room.y * 2: # If you have exceeded the entire room size stop
                     break
                 elif self.explore_room_flag == True:
                     self.get_logger().info(f'The goal was accepted: {location}')
+                    
+        while abs(self.robot_xyz[1] - location) > 0.6 or abs(self.robot_xyz[0] - room.x) > 0.6:
+            # self.get_logger().info(f"Y: {self.robot_xyz[1] - location} and X diff: {self.robot_xyz[0] - room.x} ")
+            # pass
+            self.rate.sleep()
+            
+                         
+            
 
         #robonaut.send_goal(robonaut.coordinates.module_1.entrance.x,robonaut.coordinates.module_1.entrance.y,0)  # example coordinates
         
@@ -382,9 +389,12 @@ def main():
                     robonaut.get_logger().info('At red room')
                     
             if (robonaut.explore == False):
-                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
+                robonaut.explore_room(2, 1) # Try send the bot to one side of the room after
+                # robonaut.rate.sleep()   
                 robonaut.rotation(2 * 3.141597)
-                robonaut.explore_room(1, 2) 
+                robonaut.explore_room(2, 2) 
+                # robonaut.rate.sleep()   
+                robonaut.rotation(2 * 3.141597)
                 robonaut.explore = True
                 
             pass
