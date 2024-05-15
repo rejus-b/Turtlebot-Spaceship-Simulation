@@ -304,7 +304,7 @@ class RoboNaut(Node):
                 elif self.explore_room_flag == True:
                     self.get_logger().info(f'The goal was accepted: {location}')
                     
-        while abs(self.robot_xyz[1] - location) > 0.6 or abs(self.robot_xyz[0] - room.x) > 0.6:
+        while abs(self.robot_xyz[1] - location) > 0.3 or abs(self.robot_xyz[0] - room.x) > 0.3:
             # self.get_logger().info(f"Y: {self.robot_xyz[1] - location} and X diff: {self.robot_xyz[0] - room.x} ")
             # pass
             self.rate.sleep()
@@ -391,10 +391,10 @@ def main():
                     robonaut.get_logger().info('At red room')
                     
             if (robonaut.explore == False):
-                robonaut.explore_room(2, 1) # Try send the bot to one side of the room after
+                robonaut.explore_room(1, 1) # Try send the bot to one side of the room after
                 # robonaut.rate.sleep()   
                 robonaut.rotation(2 * 3.141597)
-                robonaut.explore_room(2, 2) 
+                robonaut.explore_room(1, 2) 
                 # robonaut.rate.sleep()   
                 robonaut.rotation(2 * 3.141597)
                 robonaut.explore = True
