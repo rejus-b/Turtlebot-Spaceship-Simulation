@@ -25,6 +25,7 @@ import numpy as np
 from .picture_processing import *
 from .stitcher import *
 from geometry_msgs.msg import Twist, PoseStamped
+from sensor_msgs.msg import LaserScan
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -74,7 +75,8 @@ class RoboNaut(Node):
         self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         # camera subscription and bridge
         self.subscription = self.create_subscription(Image, 'camera/image_raw', self.camera_view, 10)
-        self.odom_subscription = self.create_subscription(Odometry, '/odom', self.odom_callback,10)
+        self.odom_subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.lidar_subscription = self.create_subscription(LaserScan, '/scan', self.lidar_callback, 10)
         self.bridge = CvBridge()
         # publisher for velocity
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -84,6 +86,7 @@ class RoboNaut(Node):
         self.detected_colour = None # If a button colour is currentl detected
         self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw
         self.closest_room = [0,0]
+        self.lidar_values = None
         
         self.windows_queue = []
         #movement flags
@@ -192,6 +195,10 @@ class RoboNaut(Node):
         
         self.robot_orientation = self.quaternion_to_euler(quaternion[0], quaternion[1], quaternion[2], quaternion[3])
         
+    def lidar_callback(self, msg):
+        if msg is not None:
+            self.lidar_values = msg.ranges[-15:] + msg.ranges[:15]
+            self.get_logger().info(f'Navigation result: {self.lidar_values}')
         
     def camera_view(self, data):
         try:
