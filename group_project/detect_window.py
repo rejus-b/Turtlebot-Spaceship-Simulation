@@ -86,10 +86,10 @@ def detect_window(image):
                             image_center_x = image.shape[1] // 2
                             window_center_x = x_d + w_d // 2
                             
-                            if window_center_x < image_center_x - 10:
+                            if window_center_x < image_center_x - 15:
                                 rotation_command = 10  # Rotate left
                                 
-                            elif window_center_x > image_center_x + 10:
+                            elif window_center_x > image_center_x + 15:
                                 rotation_command = -10  # Rotate right
                             else:
                                 rotation_command = 1 # Good position

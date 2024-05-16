@@ -532,7 +532,20 @@ def main():
                         robonaut.forward_to_wall()
                         robonaut.save_current_image()
                         detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+               
+                robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
+                robonaut.stop_goal()
+                if (robonaut.explore_finished_walking == 2):
+                    robonaut.get_logger().info("REJ - Spin 2")
+                    robonaut.rotation(8 * 0.785398)
+                    robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
+                    if (robonaut.walking_to_window == True):
+                        # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
+                        robonaut.forward_to_wall()
+                        robonaut.save_current_image()
+                        detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
                     
+                            
                 # robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
                 # robonaut.stop_goal()
                 # if (robonaut.explore_finished_walking == 2):
