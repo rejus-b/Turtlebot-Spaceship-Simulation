@@ -198,7 +198,7 @@ class RoboNaut(Node):
     def lidar_callback(self, msg):
         if msg is not None:
             self.lidar_values = msg.ranges[-15:] + msg.ranges[:15]
-            self.get_logger().info(f'Navigation result: {self.lidar_values}')
+            #self.get_logger().info(f'Navigation result: {self.lidar_values}')
         
     def camera_view(self, data):
         try:
@@ -247,9 +247,6 @@ class RoboNaut(Node):
 
             self.rate.sleep()
             
-            
-
-
 
         # set velocity to zero to stop the robot
         self.stop()
@@ -258,6 +255,12 @@ class RoboNaut(Node):
         desired_velocity = Twist()
         desired_velocity.linear.x = 0.0  # Send zero velocity to stop the robot
         self.publisher.publish(desired_velocity)
+        
+    def forward_to_wall(self):
+        desired_velocity = Twist()
+        desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
+        self.publisher.publish(desired_velocity)
+
         
     # adds robot xy and angle to queue as a list
     def enqueue_window(self):
@@ -431,8 +434,12 @@ def main():
             #if not robonaut.slept:
             time.sleep(.5) # robot needs beauty sleep to work
                 #robonaut.slept = True
-
-            
+            #if robonaut.lidar_values is not None:
+            if min(robonaut.lidar_values) >= 1.5:
+                robonaut.forward_to_wall()
+            else:
+                robonaut.stop() 
+            '''
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
                 room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
@@ -531,7 +538,7 @@ def main():
             #         distances = calculate_distances_from_panorama(panoramic_pic)
             #         robonaut.get_logger().info(f"{distances}")
             #         flag = False
-            
+            '''
 
                 
             pass
