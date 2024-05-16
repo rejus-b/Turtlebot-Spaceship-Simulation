@@ -442,6 +442,7 @@ def main():
             time.sleep(3)
             if not robonaut.slept:
                 robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
+                resize_png_pictures("current_photo", "frame_cropped1")
                 detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
                 robonaut.slept = True
             #if robonaut.lidar_values is not None:
