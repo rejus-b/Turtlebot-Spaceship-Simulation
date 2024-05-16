@@ -87,6 +87,7 @@ class RoboNaut(Node):
         self.robot_orientation = [0.0, 0.0, 0.0] # Roll Pitch Yaw
         self.closest_room = [0,0]
         self.lidar_values = None
+        self.current_image = Image()
         
         self.windows_queue = []
         #movement flags
@@ -206,6 +207,8 @@ class RoboNaut(Node):
         except CvBridgeError as e:
             print("An error has occoured while trying to convert image in cv: ", e)
         
+        self.current_image = self.image
+        
         # detect window
         self.detected_colour = detect_button(self.image)
         
@@ -260,6 +263,12 @@ class RoboNaut(Node):
         desired_velocity = Twist()
         desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
         self.publisher.publish(desired_velocity)
+        
+    def save_current_image(self, name):
+        if not cv2.imwrite("src/group-project-group-5/group_project/"+name, self.current_image):
+            self.get_logger().error("Error saving image")
+        else:
+            self.get_logger().info("Saved image")
 
         
     # adds robot xy and angle to queue as a list
@@ -430,15 +439,16 @@ def main():
     
     try:
         while rclpy.ok():
-            
-            #if not robonaut.slept:
-            time.sleep(.5) # robot needs beauty sleep to work
-                #robonaut.slept = True
+            time.sleep(3)
+            if not robonaut.slept:
+                robonaut.save_current_image("yessir.png") # robot needs beauty sleep to work
+                detect_planets("src/group-project-group-5/group_project/yessir.png")
+                robonaut.slept = True
             #if robonaut.lidar_values is not None:
-            if min(robonaut.lidar_values) >= 1.5:
-                robonaut.forward_to_wall()
-            else:
-                robonaut.stop() 
+            #if min(robonaut.lidar_values) >= 1.5:
+            #    robonaut.forward_to_wall()
+            #else:
+            #    robonaut.stop() 
             '''
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
