@@ -62,7 +62,8 @@ def from_frame_to_image_for_ml(frame, image_name:str):
         return poster_roi
         
     except Exception as e:
-        return (f"Error: {e}")
+        print(f"Error: {e}")
+        return None
     
 
 """

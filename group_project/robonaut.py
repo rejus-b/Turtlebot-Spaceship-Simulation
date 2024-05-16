@@ -265,7 +265,7 @@ class RoboNaut(Node):
         self.publisher.publish(desired_velocity)
         
     def save_current_image(self, name):
-        if not cv2.imwrite("src/group-project-group-5/group_project/"+name, self.current_image):
+        if from_frame_to_image_for_ml(self.current_image, "current_photo") is not None:
             self.get_logger().error("Error saving image")
         else:
             self.get_logger().info("Saved image")
@@ -441,8 +441,8 @@ def main():
         while rclpy.ok():
             time.sleep(3)
             if not robonaut.slept:
-                robonaut.save_current_image("yessir.png") # robot needs beauty sleep to work
-                detect_planets("src/group-project-group-5/group_project/yessir.png")
+                robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
+                detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
                 robonaut.slept = True
             #if robonaut.lidar_values is not None:
             #if min(robonaut.lidar_values) >= 1.5:

@@ -3,6 +3,7 @@ from torchvision import models, transforms
 from PIL import Image
 import numpy as np
 import torch.nn as nn
+import os
 
 # Define class labels
 class_labels = {
@@ -19,7 +20,20 @@ class_labels = {
     10: "Venus"
 }
 
-model_path = '/uolstore/home/users/ed20dl2/ros2_ws/src/group-project-group-5/supporting_files/latest_best_model_densenet201_planet_detection(2).pth'
+
+def find_model_location(filename, search_dir):
+    # Walk through the directory tree starting from search_dir
+    for root, dirs, files in os.walk(search_dir):
+        if filename in files:
+            # Found the file, return its location
+            return os.path.abspath(os.path.join(root, filename))
+
+    # File not found in the directory tree
+    print("\n\n FILE NOT FOUND \n\n")
+    return None
+
+model_path = find_model_location("latest_best_model_densenet201_planet_detection(2).pth", os.getcwd())
+# model_path = '/uolstore/home/users/ed20dl2/ros2_ws/src/group-project-group-5/supporting_files/latest_best_model_densenet201_planet_detection(2).pth'
 
 # Loading and preparing model
 def load_model(model_path):
