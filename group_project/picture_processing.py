@@ -1,3 +1,4 @@
+import math
 import cv2
 from cv_bridge import CvBridge
 import os
@@ -130,10 +131,17 @@ def calculate_distances_from_panorama(panorama_pic):
     if biggest_circles:
         biggest_circle_diameters = calculate_cirlcles_diameter(biggest_circles)
         planets_real_diameter = calculate_real_diameter(biggest_circle_diameters)
-        distance_to_earth = scaling_factor*((planets_real_diameter[0] * height_pic) / biggest_circle_diameters[0])
-        distance_to_moon = scaling_factor * ((planets_real_diameter[1] * height_pic) / biggest_circle_diameters[1])
-        #return "Moon: " + str(distance_to_moon) + " Earth: " + str(distance_to_earth)
-        return f"Biggest circles diam: {biggest_circle_diameters}, planets real diam: {planets_real_diameter}, height: {height_pic}, moon: {distance_to_moon}, earth: {distance_to_earth}"
+        
+        #distance from Earth
+        distance_to_earth = round(scaling_factor*((planets_real_diameter[0] * height_pic) / biggest_circle_diameters[0]))
+        
+        # Distance from Moon
+        distance_to_moon = round(scaling_factor * ((planets_real_diameter[1] * height_pic) / biggest_circle_diameters[1]))
+        
+        # Distance etween Earth and Moon
+        distance_between_earth_and_moon = calculate_distance_between_earth_and_moon(biggest_circles, planets_real_diameter)
+        
+        return f"Earth: {distance_to_earth} km \nMoon: {distance_to_moon} km\nDistance: {distance_between_earth_and_moon} km"
         
     else:
         return ("error, nothing happened")
@@ -199,3 +207,18 @@ def calculate_real_diameter(biggest_circle_diameters):
     moon_real_diameter_km = pixel_ratio * earth_real_diameter_km
     
     return [earth_real_diameter_km, moon_real_diameter_km]
+
+
+def calculate_distance_between_earth_and_moon(biggest_circles, planets_real_diameters):
+    earth_mid_x, earth_mid_y, earth_radius = biggest_circles[0]
+    moon_mid_x, moon_mid_y, moon_radius = biggest_circles[1]
+    
+    pixel_between_earth_and_moon=  math.sqrt((moon_mid_x - earth_mid_x)**2 + ( moon_mid_y - earth_mid_y)**2) - (earth_radius - moon_radius)
+    
+    km_per_pixel = round(planets_real_diameters[0] / (earth_radius * 2)) # km per pixel
+    
+    scalar_factor = 3
+    
+    real_distance_between_earth_and_moon = pixel_between_earth_and_moon * km_per_pixel * scalar_factor
+    
+    return round(real_distance_between_earth_and_moon)
