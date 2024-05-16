@@ -90,18 +90,17 @@ class RoboNaut(Node):
         self.current_image = Image()
         
         self.windows_queue = []
+        self.walking_to_window = False
+        
         #movement flags
         self.slept = False
         self.spun = False
-        self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
-        self.explore = False # Test boolean for room explore once
         self.move_to_entrance = True # check if robot has moved to enterance one
         self.at_entrance = False # check if currently at entrance one
         self.room_calc = False
         self.close_room_flag = 0
         self.module_one_colour = 0
         self.module_two_colour = 0
-        self.room_found = False
         self.stop_one = False
         
         # attempts for odomentry orientation
@@ -111,6 +110,9 @@ class RoboNaut(Node):
         # room expo
         self.facing_inner_wall = None 
         self.explore_finished_walking = 0
+        self.explore_room_flag = True # Used for knowing if a goal state was rejected or not when trying to explore a room
+        self.explore = False # Test boolean for room explore once
+        self.room_found = False
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -239,6 +241,14 @@ class RoboNaut(Node):
         # loop to publish the velocity estimate until desired angle achieved
         # current angle = current angular velocity * (t1 - t0)
         while (current_angle < end_angle and self.detected_colour == None): # If button found stop spinning
+            if self.window_detected[0] and self.window_detected[1] == 1 and self.room_found:
+                self.get_logger().info("Window found, searching")
+                self.walking_to_window = True
+                break
+            else:
+                self.walking_to_window = False
+            # else:
+            #     self.walking_to_window = False
             # Publish the velocity
             self.publisher.publish(desired_velocity)
 
@@ -261,11 +271,15 @@ class RoboNaut(Node):
         
     def forward_to_wall(self):
         desired_velocity = Twist()
-        desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
-        self.publisher.publish(desired_velocity)
+        if self.lidar_values is not None:
+            while min(self.lidar_values) >= 2.5:
+                desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
+                self.publisher.publish(desired_velocity)
+            desired_velocity.linear.x = 0.0
+            self.publisher.publish(desired_velocity)
         
-    def save_current_image(self, name):
-        if from_frame_to_image_for_ml(self.current_image, "current_photo") is not None:
+    def save_current_image(self):
+        if from_frame_to_image_for_ml(self.current_image, "current_photo") is None:
             self.get_logger().error("Error saving image")
         else:
             self.get_logger().info("Saved image")
@@ -273,7 +287,7 @@ class RoboNaut(Node):
         
     # adds robot xy and angle to queue as a list
     def enqueue_window(self):
-        values = [self.robot_xyz[0],self.robot_xyz[1],self.robot_orientation[0],self.robot_orientation[1],self.robot_orientation[2]]
+        values = [self.robot_xyz[0], self.robot_xyz[1], self.robot_orientation[2]]
         self.windows_queue.append(values)
     
     def dequeue_window(self):
@@ -355,8 +369,6 @@ class RoboNaut(Node):
                     self.get_logger().info(f'The goal was accepted: {location}')
                     
         while (abs(self.robot_xyz[1] - location) > 0.3 or abs(self.robot_xyz[0] - room.x) > 0.3) :
-            # self.get_logger().info(f"Y: {self.robot_xyz[1] - location} and X diff: {self.robot_xyz[0] - room.x} ")
-            # pass
             self.rate.sleep()
             
         self.explore_finished_walking += 1
@@ -440,11 +452,11 @@ def main():
     try:
         while rclpy.ok():
             time.sleep(3)
-            if not robonaut.slept:
-                robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
-                resize_png_pictures("current_photo", "frame_cropped1")
-                detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
-                robonaut.slept = True
+            # if not robonaut.slept:
+            #     robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
+            #     resize_png_pictures("current_photo", "frame_cropped1")
+            #     detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+            #     robonaut.slept = True
             #if robonaut.lidar_values is not None:
             #if min(robonaut.lidar_values) >= 1.5:
             #    robonaut.forward_to_wall()
@@ -504,19 +516,30 @@ def main():
                         explore_room_flag = 1
                         robonaut.room_found = True
                         robonaut.spun = True
-                    
+            '''     
+            explore_room_flag = 2
+            robonaut.room_found = True
+            
             if (robonaut.explore == False and robonaut.room_found):
                 robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
                 robonaut.stop_goal()
                 if (robonaut.explore_finished_walking == 1):
-                    robonaut.get_logger().info("REJ - Spin 2")
+                    robonaut.get_logger().info("REJ - Spin 1")
                     robonaut.rotation(8 * 0.785398)
+                    robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
+                    if (robonaut.walking_to_window == True):
+                        # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
+                        robonaut.forward_to_wall()
+                        robonaut.save_current_image()
+                        detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
                     
-                robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
-                robonaut.stop_goal()
-                if (robonaut.explore_finished_walking == 2):
-                    robonaut.get_logger().info("REJ - Spin 2")
-                    robonaut.rotation(8 * 0.785398)
+                # robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
+                # robonaut.stop_goal()
+                # if (robonaut.explore_finished_walking == 2):
+                #     robonaut.get_logger().info("REJ - Spin 2")
+                #     robonaut.rotation(8 * 0.785398)
+                #     if (robonaut.walking_to_window == True):
+                #         robonaut.forward_to_wall()
                     
                 robonaut.explore = True
                 
@@ -549,7 +572,7 @@ def main():
             #         distances = calculate_distances_from_panorama(panoramic_pic)
             #         robonaut.get_logger().info(f"{distances}")
             #         flag = False
-            '''
+            
 
                 
             pass
