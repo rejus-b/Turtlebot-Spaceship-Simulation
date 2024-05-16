@@ -15,7 +15,7 @@ import cv2
 from geometry_msgs.msg import Twist
 from .detect_window import detect_window
 from .detect_button import detect_button
-# from .detect_planets import detect_planets
+from .detect_planets import detect_planets
 import time
 import math
 import tf2_ros.buffer
@@ -420,7 +420,6 @@ def main():
     
     try:
         while rclpy.ok():
-            
             
             #if not robonaut.slept:
             time.sleep(.5) # robot needs beauty sleep to work

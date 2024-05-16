@@ -19,13 +19,14 @@ class_labels = {
     10: "Venus"
 }
 
-model_path = '/uolstore/home/users/ed20dl2/ros2_ws/src/group-project-group-5/supporting_files/latest_best_model_mobilenet_planet_detection.pth'
+model_path = '/uolstore/home/users/ed20dl2/ros2_ws/src/group-project-group-5/supporting_files/latest_best_model_densenet201_planet_detection(2).pth'
 
 # Loading and preparing model
 def load_model(model_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.mobilenet_v2(pretrained=True)
-    model.classifier[1] = nn.Linear(model.last_channel, 11)  # Adjusting the classifier for 11 classes
+    model = models.densenet201(pretrained=True)
+    num_ftrs = model.classifier.in_features
+    model.classifier = nn.Linear(num_ftrs, 11)  # Adjusting the classifier for 11 classes
     model.load_state_dict(torch.load(model_path, map_location=device))
     model = model.to(device)
     model.eval()  # Setting the model to evaluation mode
