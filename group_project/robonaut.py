@@ -24,6 +24,7 @@ from geometry_msgs.msg import TransformStamped
 import numpy as np
 from .picture_processing import *
 from .stitcher import *
+from geometry_msgs.msg import Twist, PoseStamped
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -105,6 +106,7 @@ class RoboNaut(Node):
 
         # room expo
         self.facing_inner_wall = None 
+        self.explore_finished_walking = 0
 
         # You can access the module coordinates like so:
         # Room 1:
@@ -200,7 +202,7 @@ class RoboNaut(Node):
         # detect window
         self.detected_colour = detect_button(self.image)
         
-        #window_detected = detect_window(self.image)
+        self.window_detected = detect_window(self.image)
         
         
         #show camera feed
@@ -273,7 +275,9 @@ class RoboNaut(Node):
             room = self.coordinates.module_2.center
         else:
             self.get_logger().info(f'A bad room code has been provided: {room}')
-            # return(1)
+
+            
+            
         # Lets explore the 1st and 3rd quarter of the room horizontally  as our intial implementation
         
         # # First need to check if these locations are acceptable goal states        
@@ -336,6 +340,8 @@ class RoboNaut(Node):
             # pass
             self.rate.sleep()
             
+        self.explore_finished_walking += 1
+        
                          
             
 
@@ -392,6 +398,9 @@ class RoboNaut(Node):
         return orientation_angle
     
     
+    # Function for stopping nav2goal
+    def stop_goal(self):
+        self.send_goal(self.robot_xyz[0], self.robot_xyz[1], self.robot_orientation[2])
 
 def main():
     def signal_handler(sig, frame):
@@ -412,10 +421,11 @@ def main():
     try:
         while rclpy.ok():
             
-            """
+            
             #if not robonaut.slept:
             time.sleep(.5) # robot needs beauty sleep to work
                 #robonaut.slept = True
+
             
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
@@ -444,11 +454,6 @@ def main():
                 robonaut.rotation(2 * 3.141597) 
                 #robonaut.spun = True
 
-            # try:
-            #     robonaut.get_logger().info(f"Colour found : {robonaut.detected_colour}")
-            # finally:
-            #     pass
-
             explore_room_flag= None
             if robonaut.at_entrance:
                 if robonaut.detected_colour == 1:
@@ -476,44 +481,50 @@ def main():
                         robonaut.room_found = True
                         robonaut.spun = True
                     
-            if (robonaut.explore == False) and robonaut.room_found:
+            if (robonaut.explore == False and robonaut.room_found):
                 robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
-                robonaut.rate.sleep()
-                robonaut.rotation(8 * 0.785398)
+                robonaut.stop_goal()
+                if (robonaut.explore_finished_walking == 1):
+                    robonaut.get_logger().info("REJ - Spin 2")
+                    robonaut.rotation(8 * 0.785398)
+                    
                 robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
-                robonaut.rate.sleep()
-                robonaut.rotation(8 * 0.785398)
+                robonaut.stop_goal()
+                if (robonaut.explore_finished_walking == 2):
+                    robonaut.get_logger().info("REJ - Spin 2")
+                    robonaut.rotation(8 * 0.785398)
+                    
                 robonaut.explore = True
                 
-            """
+        
 
                                     
-            if cv2.waitKey(1) == ord("i"):
-                robonaut.get_logger().info("i was clicked")
-                pictures_found.append(from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}"))
-                robonaut.get_logger().info(f"here the pic: {pictures_found[-1]}")
-                picture_count += 1
+            # if cv2.waitKey(1) == ord("i"):
+            #     robonaut.get_logger().info("i was clicked")
+            #     pictures_found.append(from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}"))
+            #     robonaut.get_logger().info(f"here the pic: {pictures_found[-1]}")
+            #     picture_count += 1
                 
-            if picture_count == 3:
+            # if picture_count == 3:
                 
-                name1 = "frame_cropped1"
-                name2 = "frame_cropped2" 
+            #     name1 = "frame_cropped1"
+            #     name2 = "frame_cropped2" 
                 
-                resize_png_pictures(name1, name2)
-                
-                
-                # to make it more robust, we might want to save stuff just for the tutors to see
-                # and we can use an array of images that get filled with all the frames from picture taken by the robots
-                image1 = from_png_to_cv2(name2)
-                image2 = from_png_to_cv2(name1)
+            #     resize_png_pictures(name1, name2)
                 
                 
-                if flag:
-                    panoramic_pic = perform_stitch(image1, image2, "panorama")
-                    robonaut.get_logger().info("panoramic pic stitched")
-                    distances = calculate_distances_from_panorama(panoramic_pic)
-                    robonaut.get_logger().info(f"{distances}")
-                    flag = False
+            #     # to make it more robust, we might want to save stuff just for the tutors to see
+            #     # and we can use an array of images that get filled with all the frames from picture taken by the robots
+            #     image1 = from_png_to_cv2(name2)
+            #     image2 = from_png_to_cv2(name1)
+                
+                
+            #     if flag:
+            #         panoramic_pic = perform_stitch(image1, image2, "panorama")
+            #         robonaut.get_logger().info("panoramic pic stitched")
+            #         distances = calculate_distances_from_panorama(panoramic_pic)
+            #         robonaut.get_logger().info(f"{distances}")
+            #         flag = False
             
 
                 
