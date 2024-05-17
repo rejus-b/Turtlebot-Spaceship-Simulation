@@ -290,10 +290,10 @@ class RoboNaut(Node):
     def process_saved_image(self):
         result = detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
         if result == "Earth":
-            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/Earth.png")
+            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/viewEarth.png")
             self.get_logger().info("Earth Found")
         elif result == "Moon":
-            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/Moon.png")
+            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/viewMoon.png")
             self.get_logger().info("Moon Found")
         else:
             self.get_logger().info("Earth or Moon not found in image because DK's model has said so! :)")
@@ -540,7 +540,7 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 1")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
-                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/pic1.png",robonaut.image)
+                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/window1.png",robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
@@ -554,7 +554,7 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 2")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
-                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/pic2.png", robonaut.image)
+                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/window2.png", robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
@@ -562,9 +562,13 @@ def main():
                         robonaut.save_current_image("current_photo")
                         robonaut.process_saved_image()
                         
-                perform_stitch("Earth.png", "Moon.png", "panorama")
+                perform_stitch("viewEarth.png", "viewMoon.png", "panorama")
                 resize_png_pictures_manual("panorama", 700,300)
-                robonaut.get_logger().info(calculate_distances_from_panorama("panorama.png"))
+                results = calculate_distances_from_panorama("panorama.png")
+                f = open("src/group-project-group-5/group_project/measurements.txt", "w")
+                f.write(results)
+                f.close()
+                robonaut.get_logger().info(results)
                         
                     
                             

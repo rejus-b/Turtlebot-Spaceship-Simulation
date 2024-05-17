@@ -78,7 +78,7 @@ def detect_window(image):
                         ratio = float(w_d)/h_d
                         if ratio >=0.90  and ratio <= 1.5:
                             #image = cv2.drawContours(image, contour_dark, -1, (0, 0, 255), 2) #draw red contours
-                            #image = cv2.rectangle(image, (x_d,y_d), (x_d+w_d, y_d+h_d), (0,255,0), 2) # draw green rectangle
+                            image = cv2.rectangle(image, (x_d,y_d), (x_d+w_d, y_d+h_d), (0,255,0), 2) # draw green rectangle
                             
                             
                             # detect if the rect is in the center
