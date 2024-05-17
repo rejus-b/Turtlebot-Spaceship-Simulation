@@ -33,7 +33,7 @@ output: either the picture in array or a string containing the error
 def from_frame_to_image_for_ml(frame, image_name:str):
     try:
         
-        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", image_name + ".png")
+        path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "group5", image_name + ".png")
 
         # Convert the image to grayscale
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -134,7 +134,7 @@ def from_png_to_cv2(filename:str):
 Function to detect earth and moon and calculate the distances
 """
 def calculate_distances_from_panorama(panorama_pic):
-    panorama_pic =  cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+panorama_pic)
+    panorama_pic =  cv2.imread("src/group-project-group-5/group_project/group5/"+panorama_pic)
     height_pic, width_pic, _ = panorama_pic.shape
     scaling_factor = 3
 

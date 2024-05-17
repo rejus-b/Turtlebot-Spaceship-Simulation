@@ -275,7 +275,7 @@ class RoboNaut(Node):
         desired_velocity = Twist()
         if self.lidar_values is not None:
             while min(self.lidar_values) >= 1.5:
-                time.sleep(0.3)
+                time.sleep(0.5)
                 desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
                 self.publisher.publish(desired_velocity)
             desired_velocity.linear.x = 0.0
@@ -288,12 +288,12 @@ class RoboNaut(Node):
             self.get_logger().info("Saved image")
             
     def process_saved_image(self):
-        result = detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+        result = detect_planets("src/group-project-group-5/group_project/group5/current_photo.png")
         if result == "Earth":
-            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/viewEarth.png")
+            os.rename("src/group-project-group-5/group_project/group5/current_photo.png", "src/group-project-group-5/group_project/group5/viewEarth.png")
             self.get_logger().info("Earth Found")
         elif result == "Moon":
-            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/viewMoon.png")
+            os.rename("src/group-project-group-5/group_project/group5/current_photo.png", "src/group-project-group-5/group_project/group5/viewMoon.png")
             self.get_logger().info("Moon Found")
         else:
             self.get_logger().info("Earth or Moon not found in image because DK's model has said so! :)")
@@ -469,7 +469,7 @@ def main():
             # if not robonaut.slept:
             #     robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
             #     resize_png_pictures("current_photo", "frame_cropped1")
-            #     detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+            #     detect_planets("src/group-project-group-5/group_project/group5/current_photo.png")
             #     robonaut.slept = True
             #if robonaut.lidar_values is not None:
             #if min(robonaut.lidar_values) >= 1.5:
@@ -540,7 +540,7 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 1")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
-                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/window1.png",robonaut.image)
+                    cv2.imwrite("src/group-project-group-5/group_project/group5/window1.png",robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
@@ -554,7 +554,7 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 2")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
-                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/window2.png", robonaut.image)
+                    cv2.imwrite("src/group-project-group-5/group_project/group5/window2.png", robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
@@ -565,7 +565,7 @@ def main():
                 perform_stitch("viewEarth.png", "viewMoon.png", "panorama")
                 resize_png_pictures_manual("panorama", 700,300)
                 results = calculate_distances_from_panorama("panorama.png")
-                f = open("src/group-project-group-5/group_project/measurements.txt", "w")
+                f = open("src/group-project-group-5/group_project/group5/measurements.txt", "w")
                 f.write(results)
                 f.close()
                 robonaut.get_logger().info(results)

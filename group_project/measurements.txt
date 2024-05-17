@@ -1,3 +1,0 @@
-Earth: 220535 km 
-Moon: 220535 km
-Distance: 390011 km

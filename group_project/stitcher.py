@@ -7,8 +7,8 @@ def perform_stitch( image1, image2, stitched_file_name):
     
       # Create a stitcher object
     stitcher = cv2.Stitcher_create()
-    image1 = cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+image1)
-    image2 = cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+image2)
+    image1 = cv2.imread("src/group-project-group-5/group_project/group5/"+image1)
+    image2 = cv2.imread("src/group-project-group-5/group_project/group5/"+image2)
     # Stitch the images
     status, stitched_image = stitcher.stitch([image1, image2])
 
@@ -21,7 +21,7 @@ def perform_stitch( image1, image2, stitched_file_name):
         
         try:
         
-            path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "cw_pictures", stitched_file_name + ".png")
+            path = os.path.join(os.getcwd(), "src","group-project-group-5", "group_project", "group5", stitched_file_name + ".png")
             
             
             # Save the cropped poster image to a file
