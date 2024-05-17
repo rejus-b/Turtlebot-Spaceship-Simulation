@@ -99,6 +99,18 @@ def resize_png_pictures(name1, name2):
         cv2.imwrite(path_2, image2_resized)
         
 
+def resize_png_pictures_manual(name1, width, height): 
+    
+    path_1 = find_image_location(name1 + ".png", os.getcwd()) # find name1 frm current path 
+    
+    # Load the two images
+    image1 = cv2.imread(path_1)
+
+    # Resize image1 to match the dimensions of image2
+    image1_resized = cv2.resize(image1, (width, height))
+    # Save the resized image
+    cv2.imwrite(path_1, image1_resized)
+
 """
 Function to translate a jpg file to a cv2
 
@@ -122,10 +134,9 @@ def from_png_to_cv2(filename:str):
 Function to detect earth and moon and calculate the distances
 """
 def calculate_distances_from_panorama(panorama_pic):
-    
+    panorama_pic =  cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+panorama_pic)
     height_pic, width_pic, _ = panorama_pic.shape
     scaling_factor = 3
-    
 
     biggest_circles = detect_2_biggest_circle(panorama_pic)
     

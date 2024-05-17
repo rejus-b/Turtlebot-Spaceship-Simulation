@@ -7,7 +7,8 @@ def perform_stitch( image1, image2, stitched_file_name):
     
       # Create a stitcher object
     stitcher = cv2.Stitcher_create()
-
+    image1 = cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+image1)
+    image2 = cv2.imread("src/group-project-group-5/group_project/cw_pictures/"+image2)
     # Stitch the images
     status, stitched_image = stitcher.stitch([image1, image2])
 

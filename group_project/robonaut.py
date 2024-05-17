@@ -26,6 +26,8 @@ from .picture_processing import *
 from .stitcher import *
 from geometry_msgs.msg import Twist, PoseStamped
 from sensor_msgs.msg import LaserScan
+from os import rename
+
 
 # checklist created by Leandro (Feel free to change it / modify)
 # ============================================================================= #
@@ -272,17 +274,29 @@ class RoboNaut(Node):
     def forward_to_wall(self):
         desired_velocity = Twist()
         if self.lidar_values is not None:
-            while min(self.lidar_values) >= 2.5:
+            while min(self.lidar_values) >= 1.5:
+                time.sleep(0.3)
                 desired_velocity.linear.x = 0.2  # Send zero velocity to stop the robot
                 self.publisher.publish(desired_velocity)
             desired_velocity.linear.x = 0.0
             self.publisher.publish(desired_velocity)
         
-    def save_current_image(self):
-        if from_frame_to_image_for_ml(self.current_image, "current_photo") is None:
+    def save_current_image(self,name):
+        if from_frame_to_image_for_ml(self.current_image, name) is None:
             self.get_logger().error("Error saving image")
         else:
             self.get_logger().info("Saved image")
+            
+    def process_saved_image(self):
+        result = detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+        if result == "Earth":
+            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/Earth.png")
+            self.get_logger().info("Earth Found")
+        elif result == "Moon":
+            os.rename("src/group-project-group-5/group_project/cw_pictures/current_photo.png", "src/group-project-group-5/group_project/cw_pictures/Moon.png")
+            self.get_logger().info("Moon Found")
+        else:
+            self.get_logger().info("Earth or Moon not found in image because DK's model has said so! :)")
 
         
     # adds robot xy and angle to queue as a list
@@ -451,7 +465,7 @@ def main():
     
     try:
         while rclpy.ok():
-            time.sleep(3)
+            time.sleep(.5)
             # if not robonaut.slept:
             #     robonaut.save_current_image("current_photo.png") # robot needs beauty sleep to work
             #     resize_png_pictures("current_photo", "frame_cropped1")
@@ -462,7 +476,7 @@ def main():
             #    robonaut.forward_to_wall()
             #else:
             #    robonaut.stop() 
-            '''
+            
             if not robonaut.room_calc:
                 room_one_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_1.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_1.entrance.y)
                 room_two_dis = abs(robonaut.robot_xyz[0] - robonaut.coordinates.module_2.entrance.x) + abs(robonaut.robot_xyz[1] - robonaut.coordinates.module_2.entrance.y)
@@ -483,12 +497,13 @@ def main():
                 
             
             if (abs(robonaut.robot_xyz[0] - robonaut.closest_room[0]) <= 0.6 and abs(robonaut.robot_xyz[1] - robonaut.closest_room[1]) <= 0.6):
+                robonaut.stop_goal()
                 robonaut.at_entrance = True
                 
             if robonaut.at_entrance and not robonaut.spun:
                 robonaut.get_logger().info('Spin begin')
                 robonaut.rotation(2 * 3.141597) 
-                #robonaut.spun = True
+                robonaut.spun = True
 
             explore_room_flag= None
             if robonaut.at_entrance:
@@ -516,9 +531,7 @@ def main():
                         explore_room_flag = 1
                         robonaut.room_found = True
                         robonaut.spun = True
-            '''     
-            explore_room_flag = 2
-            robonaut.room_found = True
+                 
             
             if (robonaut.explore == False and robonaut.room_found):
                 robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
@@ -527,11 +540,13 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 1")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
+                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/pic1.png",robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
-                        robonaut.save_current_image()
-                        detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+                        time.sleep(1)
+                        robonaut.save_current_image("current_photo")
+                        robonaut.process_saved_image()
                
                 robonaut.explore_room(explore_room_flag, 1) # Try send the bot to one side of the room after
                 robonaut.stop_goal()
@@ -539,11 +554,18 @@ def main():
                     robonaut.get_logger().info("REJ - Spin 2")
                     robonaut.rotation(8 * 0.785398)
                     robonaut.get_logger().info(f"Walk to window: {robonaut.walking_to_window}")
+                    cv2.imwrite("src/group-project-group-5/group_project/cw_pictures/pic2.png", robonaut.image)
                     if (robonaut.walking_to_window == True):
                         # robonaut.get_logger().info(f"window: {robonaut.walking_to_window}")
                         robonaut.forward_to_wall()
-                        robonaut.save_current_image()
-                        detect_planets("src/group-project-group-5/group_project/cw_pictures/current_photo.png")
+                        time.sleep(1)
+                        robonaut.save_current_image("current_photo")
+                        robonaut.process_saved_image()
+                        
+                perform_stitch("Earth.png", "Moon.png", "panorama")
+                resize_png_pictures_manual("panorama", 700,300)
+                robonaut.get_logger().info(calculate_distances_from_panorama("panorama.png"))
+                        
                     
                             
                 # robonaut.explore_room(explore_room_flag, 2) # Try send the bot to one side of the room after
@@ -558,35 +580,38 @@ def main():
                 
         
 
-                                    
-            # if cv2.waitKey(1) == ord("i"):
-            #     robonaut.get_logger().info("i was clicked")
-            #     pictures_found.append(from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}"))
-            #     robonaut.get_logger().info(f"here the pic: {pictures_found[-1]}")
-            #     picture_count += 1
                 
-            # if picture_count == 3:
+            #distances = calculate_distances_from_panorama("panorama.png")
+            #robonaut.get_logger().info(f"{distances}")    
+            '''                                 
+            if cv2.waitKey(1) == ord("i"):
+                robonaut.get_logger().info("i was clicked")
+                pictures_found.append(from_frame_to_image_for_ml(robonaut.image, f"frame_cropped{picture_count}"))
+                robonaut.get_logger().info(f"here the pic: {pictures_found[-1]}")
+                picture_count += 1
                 
-            #     name1 = "frame_cropped1"
-            #     name2 = "frame_cropped2" 
+            if picture_count == 1:
                 
-            #     resize_png_pictures(name1, name2)
+                name1 = "frame_cropped1"
+                name2 = "frame_cropped2" 
                 
-                
-            #     # to make it more robust, we might want to save stuff just for the tutors to see
-            #     # and we can use an array of images that get filled with all the frames from picture taken by the robots
-            #     image1 = from_png_to_cv2(name2)
-            #     image2 = from_png_to_cv2(name1)
+                resize_png_pictures(name1, name2)
                 
                 
-            #     if flag:
-            #         panoramic_pic = perform_stitch(image1, image2, "panorama")
-            #         robonaut.get_logger().info("panoramic pic stitched")
-            #         distances = calculate_distances_from_panorama(panoramic_pic)
-            #         robonaut.get_logger().info(f"{distances}")
-            #         flag = False
+                # to make it more robust, we might want to save stuff just for the tutors to see
+                # and we can use an array of images that get filled with all the frames from picture taken by the robots
+                image1 = from_png_to_cv2(name2)
+                image2 = from_png_to_cv2(name1)
+                
+                
+                if flag:
+                    panoramic_pic = perform_stitch(image1, image2, "panorama")
+                    robonaut.get_logger().info("panoramic pic stitched")
+                    distances = calculate_distances_from_panorama(panoramic_pic)
+                    robonaut.get_logger().info(f"{distances}")
+                    flag = False
             
-
+'''
                 
             pass
     except ROSInterruptException:
