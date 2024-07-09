@@ -14,7 +14,7 @@ This project was contributed to and designed by:
 
 The project aim, over the course of a week, was to create a turtlebot that could explore a spaceship. This spaceship would have 'broken' rooms and obstacles, our goal was to create a robust solution regardless of obstacles and map dimensionality, which would navigate and identify planets within windows inside rooms and calculate the distance between planets.
 
-We used ROS2 for programming the turtlebot, Gazebo/Rviz for visualising the robot and for localisation display. The robot itself had access to LiDAR and the Nav2Goal stack to help facilitate movement, while relying on openCV for object detection, and a convultional neural network (CNN) for planet classification. At the end of the week, we took our robot from the simulated environment to a real world testing environment where we saw mixed results, with further documentation of the entire project in the pdf listed at the bottom. 
+We used ROS2 for programming the turtlebot, Gazebo/Rviz for visualising the robot and for localisation display. The robot itself had access to LiDAR and the Nav2Goal stack to help facilitate movement, while relying on openCV for object detection, and a convolutional neural network (CNN) for planet classification. At the end of the week, we took our robot from the simulated environment to a real world testing environment where we saw mixed results, with further documentation of the entire project in the pdf listed at the bottom or alternatively [here](./Robotic%20Spaceship%20Report.pdf).
 
 The key tasks can be broken down into:
 
